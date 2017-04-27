@@ -1,6 +1,6 @@
 {
   "name": "wise-paas-scada",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A utility of scada on wise-paas platform",
   "main": "index.js",
   "scripts": {
