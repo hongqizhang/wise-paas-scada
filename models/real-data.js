@@ -12,3 +12,5 @@ let realData = new Schema({
   }
 }, { collection: 'SCADARealData', versionKey: false });
 mongoose.model('RealData', realData);
+
+module.exports = mongoose.model('RealData');

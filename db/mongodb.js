@@ -3,10 +3,6 @@
 const util = require('util');
 const mongoose = require('mongoose');
 
-const realData = require('../models/realData.js');
-
-let RealData = mongoose.model('RealData');
-
 function _connect (conf) {
   if (!conf) {
     console.error('[mongodb] no config !');
@@ -29,20 +25,14 @@ function _disconnect () {
   mongoose.disconnect();
 }
 
-function _findOneRealData (params, callback) {
-  if (params) {
-    let id = util.format('%s/%s/%s', params.scadaId, params.deviceId, params.tagName);
-    RealData.findOne({ _id: id }, function (err, result) {
-      if (err) {
-        console.error(err);
-        callback(err);
-      } else {
-        callback(null, result);
-      }
-    });
+function _isConnected () {
+  if (mongoose && mongoose.connection && mongoose.connection.readyState) {
+    return true;
+  } else {
+    return false;
   }
 }
 
 module.exports.connect = _connect;
 module.exports.disconnect = _disconnect;
-module.exports.findOneRealData = _findOneRealData;
+module.exports.isConnected = _isConnected;
