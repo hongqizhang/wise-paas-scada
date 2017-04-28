@@ -1,7 +1,32 @@
 'use strict';
 
-const datastore = require('./api/datastore.js');
-const deviceManager = require('./api/device-manager.js');
+const wisePaasScada = require('./index.js');
+
+const datastore = wisePaasScada.datastore;
+const deviceManager = wisePaasScada.deviceManager;
+const waamqp = wisePaasScada.waamqp;
+
+// AMQP
+let amqpConf = {
+  protocol: 'amqp',
+  hostname: '172.16.12.211',
+  port: 5672,
+  username: 'admin',
+  password: 'admin'
+};
+waamqp.connect(amqpConf, (err) => {
+  if (err) {
+    console.error(err);
+  } else {
+    console.log('AMQP connect success !');
+    waamqp.events.on('conn', (tenantID, scadaId, payload) => {
+      console.log(payload);
+    });
+    waamqp.events.on('data', (tenantID, scadaId, payload) => {
+      console.log(payload);
+    });
+  }
+});
 
 let conf = {
   hostname: '172.16.12.211',
@@ -12,6 +37,8 @@ let conf = {
 };
 
 datastore.init(conf);
+deviceManager.init(conf);
+
 let dsParams = {
   scadaId: 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce',
   deviceId: 'P01_Modsim',
@@ -33,7 +60,6 @@ datastore.upsertRealData(dsParams, function (err, result) {
   }
 });
 
-deviceManager.init(conf);
 let id = 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce';
 let dmParams = {
   status: true,

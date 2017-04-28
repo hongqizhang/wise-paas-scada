@@ -1,7 +1,5 @@
 'use strict';
 
-const util = require('util');
-
 const mongodb = require('../db/mongodb.js');
 const DeviceStatus = require('../models/device-status.js');
 
