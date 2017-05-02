@@ -17,22 +17,29 @@ module.exports.quit = () => {
 
 module.exports.getDeviceStatus = (id, callback) => {
   if (mongodb) {
-    DeviceStatus.findOne({ id: id }, function (err, result) {
+    DeviceStatus.findOne({ _id: id }, function (err, result) {
       if (err) {
-        console.error(err);
         callback(err);
-      } else {
-        callback(null, result);
+        return;
       }
+      let response = null;
+      if (result) {
+        response = {
+          id: id,
+          status: result.status
+        };
+      }
+      callback(null, response);
     });
   }
 };
 
 module.exports.updateDeviceStatus = (id, status, callback) => {
   if (mongodb) {
-    DeviceStatus.update({ id: id }, { status: status, ts: new Date() }, { upsert: false }, function (err, result) {
+    DeviceStatus.update({ _id: id }, { status: status, ts: new Date() }, { upsert: false }, function (err, result) {
       if (err) {
         callback(err);
+        return;
       }
       let response = { ok: false };
       if (result && result.n) {
@@ -45,9 +52,10 @@ module.exports.updateDeviceStatus = (id, status, callback) => {
 
 module.exports.upsertDeviceInfo = (id, params, callback) => {
   if (mongodb) {
-    DeviceStatus.update({ id: id }, { id: id, status: params.status, freq: params.freq, ts: new Date() }, { upsert: true }, function (err, result) {
+    DeviceStatus.update({ _id: id }, { _id: id, status: params.status, freq: params.freq, ts: new Date() }, { upsert: true }, function (err, result) {
       if (err) {
         callback(err);
+        return;
       }
       let response = { ok: false };
       if (result && result.n) {

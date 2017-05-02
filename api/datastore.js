@@ -20,27 +20,38 @@ module.exports.quit = () => {
 module.exports.getRealData = (params, callback) => {
   if (mongodb) {
     let id = util.format('%s/%s/%s', params.scadaId, params.deviceId, params.tagName);
-    RealData.findOne({ id: id }, function (err, result) {
+    RealData.findOne({ _id: id }, function (err, result) {
       if (err) {
-        console.error(err);
         callback(err);
-      } else {
-        if (result) {
-          params.value = result.value;
-          params.ts = result.ts;
-        }
-        callback(null, params);
+        return;
       }
+      let response = null;
+      if (result) {
+        response = {
+          scadaId: params.scadaId,
+          deviceId: params.deviceId,
+          tagName: params.tagName,
+          value: result.value,
+          ts: result.ts
+        };
+      }
+      callback(null, response);
     });
   }
 };
 
 module.exports.upsertRealData = (params, callback) => {
+  if (!params.value) {
+    let err = 'value can not be null !';
+    callback(err);
+    return;
+  }
   if (mongodb) {
     let id = util.format('%s/%s/%s', params.scadaId, params.deviceId, params.tagName);
-    RealData.update({ id: id }, { id: id, value: params.value, ts: new Date() }, { upsert: true }, function (err, result) {
+    RealData.update({ _id: id }, { id: id, value: params.value, ts: new Date() }, { upsert: true }, function (err, result) {
       if (err) {
         callback(err);
+        return;
       }
       let response = { ok: false };
       if (result && result.n) {
@@ -52,11 +63,17 @@ module.exports.upsertRealData = (params, callback) => {
 };
 
 module.exports.updateRealData = (params, callback) => {
+  if (!params.value) {
+    let err = 'value can not be null !';
+    callback(err);
+    return;
+  }
   if (mongodb) {
     let id = util.format('%s/%s/%s', params.scadaId, params.deviceId, params.tagName);
-    RealData.update({ id: id }, { value: params.value, ts: new Date() }, { upsert: false }, function (err, result) {
+    RealData.update({ _id: id }, { value: params.value, ts: new Date() }, { upsert: false }, function (err, result) {
       if (err) {
         callback(err);
+        return;
       }
       let response = { ok: false };
       if (result && result.n) {
