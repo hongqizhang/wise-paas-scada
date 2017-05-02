@@ -46,14 +46,17 @@ let dsParams = {
   value: 100
 };
 
-datastore.upsertRealData(dsParams, function (err, result) {
+datastore.updateRealData(dsParams, function (err, result) {
   if (err) {
     console.error(err);
   } else {
+    console.log('updateRealData: ');
+    console.log(result);
     datastore.getRealData(dsParams, function (err, result) {
       if (err) {
         console.error(err);
       } else {
+        console.log('getRealData: ');
         console.log(result);
       }
     });
@@ -69,10 +72,13 @@ deviceManager.upsertDeviceInfo(id, dmParams, function (err, result) {
   if (err) {
     console.error(err);
   } else {
+    console.log('upsertDeviceInfo: ');
+    console.log(result);
     deviceManager.getDeviceStatus(id, function (err, result) {
       if (err) {
         console.error(err);
       } else {
+        console.log('getDeviceStatus: ');
         console.log(result);
       }
     });

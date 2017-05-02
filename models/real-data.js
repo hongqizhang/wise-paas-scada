@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 
 let Schema = mongoose.Schema;
 let realData = new Schema({
-  _id: String,
+  id: { type: String, schemaName: '_id' },
   value: String,
   ts: {
     type: Date,

@@ -51,10 +51,10 @@ function _connect (conf, callback) {
         if (buff.length !== 6) {
           return;
         }
-        let tenantID = buff[2];
+        let tenantId = buff[2];
         let scadaId = buff[4];
         // console.log(' [cfg] Received %s', msg.content.toString());
-        events.emit('config', tenantID, scadaId, msg.content.toString());
+        events.emit('config', tenantId, scadaId, msg.content.toString());
       }, { noAck: true });
 
       ch.consume(waDataQ, function (msg) {
@@ -62,10 +62,10 @@ function _connect (conf, callback) {
         if (buff.length !== 6) {
           return;
         }
-        let tenantID = buff[2];
+        let tenantId = buff[2];
         let scadaId = buff[4];
         // console.log(' [data] Received %s', msg.content.toString());
-        events.emit('data', tenantID, scadaId, msg.content.toString());
+        events.emit('data', tenantId, scadaId, msg.content.toString());
       }, { noAck: true });
 
       ch.consume(waConnQ, function (msg) {
@@ -73,10 +73,10 @@ function _connect (conf, callback) {
         if (buff.length !== 6) {
           return;
         }
-        let tenantID = buff[2];
+        let tenantId = buff[2];
         let scadaId = buff[4];
         // console.log(' [connection] Received %s', msg.content.toString());
-        events.emit('conn', tenantID, scadaId, msg.content.toString());
+        events.emit('conn', tenantId, scadaId, msg.content.toString());
       }, { noAck: true });
 
       channel = ch;

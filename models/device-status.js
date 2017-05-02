@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 
 let Schema = mongoose.Schema;
 let deviceStatus = new Schema({
-  _id: String,  // scadaId or deviceId
+  id: { type: String, schemaName: '_id' },   // scadaId or deviceId
   status: Boolean,
   freq: Number,
   ts: {
