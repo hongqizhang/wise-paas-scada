@@ -13,7 +13,9 @@ function _connect (conf) {
     if (err) {
       console.error('[mongodb] ' + err);
     } else {
-      console.log('[mongodb] connected !');
+      mongoose.connection.on('connected', function () {
+        console.log('[mongodb] connected !');
+      });
       mongoose.connection.on('disconnected', function () {
         console.log('[mongodb] disconnected !');
       });
@@ -26,7 +28,15 @@ function _disconnect () {
 }
 
 function _isConnected () {
-  if (mongoose && mongoose.connection && mongoose.connection.readyState) {
+  if (mongoose && mongoose.connection && mongoose.connection.readyState === 1) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function _isConnecting () {
+  if (mongoose && mongoose.connection && mongoose.connection.readyState === 2) {
     return true;
   } else {
     return false;
@@ -36,3 +46,4 @@ function _isConnected () {
 module.exports.connect = _connect;
 module.exports.disconnect = _disconnect;
 module.exports.isConnected = _isConnected;
+module.exports.isConnecting = _isConnecting;

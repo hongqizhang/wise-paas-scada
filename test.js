@@ -14,6 +14,7 @@ let amqpConf = {
   username: 'admin',
   password: 'admin'
 };
+
 waamqp.connect(amqpConf, (err) => {
   if (err) {
     console.error(err);
@@ -40,13 +41,30 @@ datastore.init(conf);
 deviceManager.init(conf);
 
 let dsParams = {
-  scadaId: 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce',
-  deviceId: 'P01_Modsim',
-  tagName: 'TestAO01',
-  value: 100
+  scadaId: 'cda43195-7a0a-4903-a533-d333d8c5f9d9',
+  deviceId: 'P02_SCADA',
+  tagName: 'AL2_MAUPT:PV'
+  // value: 100
 };
+datastore.getRealData(dsParams, function (err, result) {
+  if (err) {
+    console.error(err);
+  } else {
+    console.log('getRealData: ');
+    console.log(result);
+  }
+});
 
-datastore.updateRealData(dsParams, function (err, result) {
+/* datastore.deleteRealDataByScadaId(dsParams, function (err, result) {
+  if (err) {
+    console.error(err);
+  } else {
+    console.log('deleteRealData: ');
+    console.log(result);
+  }
+}); */
+
+/* datastore.updateRealData(dsParams, function (err, result) {
   if (err) {
     console.error(err);
   } else {
@@ -61,7 +79,7 @@ datastore.updateRealData(dsParams, function (err, result) {
       }
     });
   }
-});
+}); */
 
 let id = 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce';
 let dmParams = {

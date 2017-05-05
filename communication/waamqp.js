@@ -7,11 +7,25 @@ const watopics = require('../common/watopics.js');
 const waCfgQ = 'waCfgQ';
 const waDataQ = 'waDataQ';
 const waConnQ = 'waConnQ';
+const waCmdQ = 'waCmdQ';
 const exchangeName = 'amq.topic';
 
 let events = new EventEmitter();
 let connection = null;
 let channel = null;
+
+function _publish (topic, message, options) {
+  if (channel) {
+    let routingKey = topic.replace(/\//g, '.');
+    let content = JSON.stringify(message);
+    let buffer = Buffer.alloc(content.length, content);
+    channel.publish(exchangeName, routingKey, buffer, { persistent: false }, function (err, result) {
+      if (err) {
+        console.error('[AMQP] publish', err);
+      }
+    });
+  }
+}
 
 function _connect (conf, callback) {
   let url = {
@@ -39,11 +53,13 @@ function _connect (conf, callback) {
       ch.assertQueue(waCfgQ, { durable: true });
       ch.assertQueue(waDataQ, { durable: true });
       ch.assertQueue(waConnQ, { durable: true });
+      ch.assertQueue(waCmdQ, { durable: true });
 
       // binding mqtt topic to queue, and '/' must be replaced to '.' in topic
       ch.bindQueue(waCfgQ, exchangeName, watopics.configTopic.replace(/\//g, '.'));
       ch.bindQueue(waDataQ, exchangeName, watopics.dataTopic.replace(/\//g, '.'));
       ch.bindQueue(waConnQ, exchangeName, watopics.connTopic.replace(/\//g, '.'));
+      ch.bindQueue(waCmdQ, exchangeName, watopics.cmdTopic.replace(/\//g, '.'));
       ch.prefetch(1);
       // /wisepaas/general/scada/<scadaId>/cfg
       ch.consume(waCfgQ, function (msg) {
@@ -97,6 +113,7 @@ function _close () {
 module.exports.events = events;
 module.exports.connect = _connect;
 module.exports.close = _close;
+module.exports.publish = _publish;
 
 /* class WaAMQP {
   constructor () {

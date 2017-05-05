@@ -4,7 +4,7 @@ const mongodb = require('../db/mongodb.js');
 const DeviceStatus = require('../models/device-status.js');
 
 module.exports.init = (conf) => {
-  if (mongodb && mongodb.isConnected() === false) {
+  if (mongodb && mongodb.isConnected() === false && mongodb.isConnecting() === false) {
     mongodb.connect(conf);
   }
 };

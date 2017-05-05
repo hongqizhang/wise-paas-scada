@@ -1,10 +1,10 @@
 'use strict';
 
 module.exports = {
-  scadaTopic: '/wisepaas/general/scada/#',
   configTopic: '/wisepaas/*/scada/*/cfg',   // /wisepaas/<tenantId>/scada/<scadaId>/cfg
   dataTopic: '/wisepaas/*/scada/*/data',
-  connTopic: '/wisepaas/*/scada/*/conn'
+  connTopic: '/wisepaas/*/scada/*/conn',
+  cmdTopic: '/wisepaas/*/scada/*/cmd'
 
   /* cfg_topic: 'iot-2/evt/wacfg/fmt/',
   cmd_topic: 'iot-2/evt/wacmd/fmt/',
