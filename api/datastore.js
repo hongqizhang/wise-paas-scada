@@ -93,7 +93,7 @@ module.exports.deleteRealDataByScadaId = (scadaId, callback) => {
       return;
     }
     let response = { ok: false };
-    if (result && result.n) {
+    if (result && result.result && result.result.n) {
       response.ok = (result.n > 0);
     }
     callback(null, response);
