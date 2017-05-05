@@ -16,52 +16,62 @@ module.exports.quit = () => {
 };
 
 module.exports.getDeviceStatus = (id, callback) => {
-  if (mongodb) {
-    DeviceStatus.findOne({ _id: id }, function (err, result) {
-      if (err) {
-        callback(err);
-        return;
-      }
-      let response = null;
-      if (result) {
-        response = {
-          id: id,
-          status: result.status
-        };
-      }
-      callback(null, response);
-    });
-  }
+  DeviceStatus.findOne({ _id: id }, function (err, result) {
+    if (err) {
+      callback(err);
+      return;
+    }
+    let response = {
+      id: id,
+      status: (result) ? result.status : false
+    };
+    callback(null, response);
+  });
 };
 
 module.exports.updateDeviceStatus = (id, status, callback) => {
-  if (mongodb) {
-    DeviceStatus.update({ _id: id }, { status: status, ts: new Date() }, { upsert: false }, function (err, result) {
-      if (err) {
-        callback(err);
-        return;
-      }
-      let response = { ok: false };
-      if (result && result.n) {
-        response.ok = (result.n === 1);
-      }
-      callback(null, response);
-    });
-  }
+  DeviceStatus.update({ _id: id }, { status: status, ts: new Date() }, { upsert: false }, function (err, result) {
+    if (err) {
+      callback(err);
+      return;
+    }
+    let response = { ok: false };
+    if (result && result.n) {
+      response.ok = (result.n === 1);
+    }
+    callback(null, response);
+  });
 };
 
 module.exports.upsertDeviceInfo = (id, params, callback) => {
-  if (mongodb) {
-    DeviceStatus.update({ _id: id }, { _id: id, status: params.status, freq: params.freq, ts: new Date() }, { upsert: true }, function (err, result) {
-      if (err) {
-        callback(err);
-        return;
-      }
-      let response = { ok: false };
-      if (result && result.n) {
-        response.ok = (result.n === 1);
-      }
-      callback(null, response);
-    });
+  DeviceStatus.update({ _id: id }, { _id: id, status: params.status, freq: params.freq, ts: new Date() }, { upsert: true }, function (err, result) {
+    if (err) {
+      callback(err);
+      return;
+    }
+    let response = { ok: false };
+    if (result && result.n) {
+      response.ok = (result.n === 1);
+    }
+    callback(null, response);
+  });
+};
+
+module.exports.deleteDeviceInfo = (id, callback) => {
+  if (!id) {
+    let err = 'id can not be null !';
+    callback(err);
+    return;
   }
+  DeviceStatus.remove({ _id: id }, function (err, result) {
+    if (err) {
+      callback(err);
+      return;
+    }
+    let response = { ok: false };
+    if (result && result.result && result.result.n) {
+      response.ok = (result.n > 0);
+    }
+    callback(null, response);
+  });
 };

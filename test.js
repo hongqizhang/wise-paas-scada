@@ -55,14 +55,14 @@ datastore.getRealData(dsParams, function (err, result) {
   }
 });
 
-datastore.deleteRealDataByScadaId(dsParams.scadaId, function (err, result) {
+/* datastore.deleteRealDataByScadaId(dsParams.scadaId, function (err, result) {
   if (err) {
     console.error(err);
   } else {
     console.log('deleteRealData: ');
     console.log(result);
   }
-});
+}); */
 
 datastore.upsertRealData(dsParams, function (err, result) {
   if (err) {
@@ -86,6 +86,7 @@ let dmParams = {
   status: true,
   freq: 5   // 5 seconds
 };
+
 deviceManager.upsertDeviceInfo(id, dmParams, function (err, result) {
   if (err) {
     console.error(err);
