@@ -24,16 +24,14 @@ module.exports.getRealData = (params, callback) => {
       callback(err);
       return;
     }
-    let response = null;
-    if (result) {
-      response = {
-        scadaId: params.scadaId,
-        deviceId: params.deviceId,
-        tagName: params.tagName,
-        value: result.value,
-        ts: result.ts
-      };
-    }
+    let response = {
+      scadaId: params.scadaId,
+      deviceId: params.deviceId,
+      tagName: params.tagName,
+      value: (result && result.value) ? result.value : '*',
+      ts: (result && result.ts) ? result.ts : new Date()
+    };
+
     callback(null, response);
   });
 };
