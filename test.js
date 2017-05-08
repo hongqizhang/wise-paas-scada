@@ -40,13 +40,20 @@ let conf = {
 datastore.init(conf);
 deviceManager.init(conf);
 
-let dsParams = {
+let dsParams1 = {
   scadaId: 'cda43195-7a0a-4903-a533-d333d8c5f9d9',
   deviceId: 'P02_SCADA',
-  tagName: 'AL2_MAUPT:PV',
+  tagName: 'ATML_PACPRF:CTR',
   value: 100
 };
-datastore.getRealData(dsParams, function (err, result) {
+let dsParams2 = {
+  scadaId: 'cda43195-7a0a-4903-a533-d333d8c5f9d9',
+  deviceId: 'P02_SCADA',
+  tagName: 'ATML_PACPRF:CTR',
+  value: 100
+};
+
+datastore.getRealData([dsParams1, dsParams2], function (err, result) {
   if (err) {
     console.error(err);
   } else {
@@ -64,13 +71,13 @@ datastore.getRealData(dsParams, function (err, result) {
   }
 }); */
 
-datastore.upsertRealData(dsParams, function (err, result) {
+/*datastore.upsertRealData(dsParams, function (err, result) {
   if (err) {
     console.error(err);
   } else {
     console.log('upsertRealData: ');
     console.log(result);
-    datastore.getRealData(dsParams, function (err, result) {
+    datastore.getRealData([dsParams], function (err, result) {
       if (err) {
         console.error(err);
       } else {
@@ -79,7 +86,7 @@ datastore.upsertRealData(dsParams, function (err, result) {
       }
     });
   }
-});
+}); */
 
 let id = 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce';
 let dmParams = {

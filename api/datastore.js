@@ -1,9 +1,30 @@
 'use strict';
 
 const util = require('util');
+const Promise = require('promise');
 
 const mongodb = require('../db/mongodb.js');
 const RealData = require('../models/real-data.js');
+
+function _getRealData (scadaId, deviceId, tagName) {
+  return new Promise((resolve, reject) => {
+    let id = util.format('%s/%s/%s', scadaId, deviceId, tagName);
+    RealData.findOne({ _id: id }, function (err, result) {
+      if (err) {
+        reject(err);
+      } else {
+        let data = {
+          scadaId: scadaId,
+          deviceId: deviceId,
+          tagName: tagName,
+          value: (result && result.value) ? result.value : '*',
+          ts: (result && result.ts) ? result.ts : new Date()
+        };
+        resolve(data);
+      }
+    });
+  });
+}
 
 module.exports.init = (conf) => {
   if (mongodb && mongodb.isConnected() === false && mongodb.isConnecting() === false) {
@@ -18,22 +39,27 @@ module.exports.quit = () => {
 };
 
 module.exports.getRealData = (params, callback) => {
-  let id = util.format('%s/%s/%s', params.scadaId, params.deviceId, params.tagName);
-  RealData.findOne({ _id: id }, function (err, result) {
-    if (err) {
-      callback(err);
-      return;
+  try {
+    if (!Array.isArray(params)) {
+      throw new Error('Input format is wrong !');
     }
-    let response = {
-      scadaId: params.scadaId,
-      deviceId: params.deviceId,
-      tagName: params.tagName,
-      value: (result && result.value) ? result.value : '*',
-      ts: (result && result.ts) ? result.ts : new Date()
-    };
+    let promises = [];
+    for (var i = 0; i < params.length; i++) {
+      let param = params[i];
+      promises.push(_getRealData.call(this, param.scadaId, param.deviceId, param.tagName));
+    }
 
-    callback(null, response);
-  });
+    Promise.all(promises)
+    .then(function (results) {
+      console.log(results);
+      callback(null, results);
+    })
+    .catch(function (err) {
+      callback(err);
+    });
+  } catch (err) {
+    callback(err);
+  }
 };
 
 module.exports.upsertRealData = (params, callback) => {
