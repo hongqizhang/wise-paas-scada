@@ -28,6 +28,7 @@ const waamqp = wisePaasScada.waamqp;
 * <a href="#upsertRealData"><code>datastore.<b>upsertRealData()</b></code></a>
 * <a href="#updateRealData"><code>datastore.<b>updateRealData()</b></code></a>
 * <a href="#deleteRealDataByScadaId"><code>datastore.<b>deleteRealDataByScadaId()</b></code></a>
+
 -------------------------------------------------------
 
 <a name="init"></a>

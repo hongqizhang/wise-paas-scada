@@ -1,5 +1,6 @@
 'use strict';
 
+const util = require('util');
 const wisePaasScada = require('./index.js');
 
 const datastore = wisePaasScada.datastore;
@@ -15,7 +16,8 @@ let amqpConf = {
   password: 'admin'
 };
 
-waamqp.connect(amqpConf, (err) => {
+let amqpUri = util.format('%s://%s:%s@%s:%d', amqpConf.protocol, amqpConf.username, amqpConf.password, amqpConf.hostname, amqpConf.port);
+waamqp.connect(amqpUri, (err) => {
   if (err) {
     console.error(err);
   } else {
@@ -71,7 +73,7 @@ datastore.getRealData([dsParams1, dsParams2], function (err, result) {
   }
 }); */
 
-/*datastore.upsertRealData(dsParams, function (err, result) {
+/* datastore.upsertRealData(dsParams, function (err, result) {
   if (err) {
     console.error(err);
   } else {

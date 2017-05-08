@@ -27,16 +27,16 @@ function _publish (topic, message, options) {
   }
 }
 
-function _connect (conf, callback) {
-  let url = {
+function _connect (uri, callback) {
+  /* let url = {
     protocol: 'amqp',
     hostname: conf.hostname || '127.0.0.1',
     port: conf.port || 5672,
     username: conf.username,
     password: conf.username
-  };
+  }; */
 
-  amqp.connect(url, function (err, conn) {
+  amqp.connect(uri, function (err, conn) {
     if (err) {
       console.error('[AMQPConnectError] ' + err);
       callback(err);
