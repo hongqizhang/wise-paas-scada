@@ -17,7 +17,7 @@ let amqpConf = {
 };
 
 let amqpUri = util.format('%s://%s:%s@%s:%d', amqpConf.protocol, amqpConf.username, amqpConf.password, amqpConf.hostname, amqpConf.port);
-waamqp.connect(amqpUri, (err) => {
+waamqp.connect(amqpUri, 'data', (err) => {
   if (err) {
     console.error(err);
   } else {

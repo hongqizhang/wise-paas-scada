@@ -27,7 +27,7 @@ function _publish (topic, message, options) {
   }
 }
 
-function _connect (uri, callback) {
+function _connect (uri, type, callback) {
   /* let url = {
     protocol: 'amqp',
     hostname: conf.hostname || '127.0.0.1',
@@ -50,50 +50,56 @@ function _connect (uri, callback) {
         return;
       }
 
-      ch.assertQueue(waCfgQ, { durable: true });
-      ch.assertQueue(waDataQ, { durable: true });
-      ch.assertQueue(waConnQ, { durable: true });
-      ch.assertQueue(waCmdQ, { durable: true });
+      if (type === 'config') {
+        ch.assertQueue(waCfgQ, { durable: true });
+        // binding mqtt topic to queue, and '/' must be replaced to '.' in topic
+        ch.bindQueue(waCfgQ, exchangeName, watopics.configTopic.replace(/\//g, '.'));
 
-      // binding mqtt topic to queue, and '/' must be replaced to '.' in topic
-      ch.bindQueue(waCfgQ, exchangeName, watopics.configTopic.replace(/\//g, '.'));
-      ch.bindQueue(waDataQ, exchangeName, watopics.dataTopic.replace(/\//g, '.'));
-      ch.bindQueue(waConnQ, exchangeName, watopics.connTopic.replace(/\//g, '.'));
-      ch.bindQueue(waCmdQ, exchangeName, watopics.cmdTopic.replace(/\//g, '.'));
-      ch.prefetch(1);
-      // /wisepaas/general/scada/<scadaId>/cfg
-      ch.consume(waCfgQ, function (msg) {
-        let buff = msg.fields.routingKey.split('.');
-        if (buff.length !== 6) {
-          return;
-        }
-        let tenantId = buff[2];
-        let scadaId = buff[4];
-        // console.log(' [cfg] Received %s', msg.content.toString());
-        events.emit('config', tenantId, scadaId, msg.content.toString());
-      }, { noAck: true });
+        ch.prefetch(1);
 
-      ch.consume(waDataQ, function (msg) {
-        let buff = msg.fields.routingKey.split('.');
-        if (buff.length !== 6) {
-          return;
-        }
-        let tenantId = buff[2];
-        let scadaId = buff[4];
-        // console.log(' [data] Received %s', msg.content.toString());
-        events.emit('data', tenantId, scadaId, msg.content.toString());
-      }, { noAck: true });
+        ch.consume(waCfgQ, function (msg) {
+          let buff = msg.fields.routingKey.split('.');
+          if (buff.length !== 6) {
+            return;
+          }
+          let tenantId = buff[2];
+          let scadaId = buff[4];
+          // console.log(' [cfg] Received %s', msg.content.toString());
+          events.emit('config', tenantId, scadaId, msg.content.toString());
+        }, { noAck: true });
+      } else {
+        ch.assertQueue(waDataQ, { durable: true });
+        ch.assertQueue(waConnQ, { durable: true });
+        ch.assertQueue(waCmdQ, { durable: true });
+        // binding mqtt topic to queue, and '/' must be replaced to '.' in topic
+        ch.bindQueue(waDataQ, exchangeName, watopics.dataTopic.replace(/\//g, '.'));
+        ch.bindQueue(waConnQ, exchangeName, watopics.connTopic.replace(/\//g, '.'));
+        ch.bindQueue(waCmdQ, exchangeName, watopics.cmdTopic.replace(/\//g, '.'));
 
-      ch.consume(waConnQ, function (msg) {
-        let buff = msg.fields.routingKey.split('.');
-        if (buff.length !== 6) {
-          return;
-        }
-        let tenantId = buff[2];
-        let scadaId = buff[4];
-        // console.log(' [connection] Received %s', msg.content.toString());
-        events.emit('conn', tenantId, scadaId, msg.content.toString());
-      }, { noAck: true });
+        ch.prefetch(1);
+
+        ch.consume(waDataQ, function (msg) {
+          let buff = msg.fields.routingKey.split('.');
+          if (buff.length !== 6) {
+            return;
+          }
+          let tenantId = buff[2];
+          let scadaId = buff[4];
+          // console.log(' [data] Received %s', msg.content.toString());
+          events.emit('data', tenantId, scadaId, msg.content.toString());
+        }, { noAck: true });
+
+        ch.consume(waConnQ, function (msg) {
+          let buff = msg.fields.routingKey.split('.');
+          if (buff.length !== 6) {
+            return;
+          }
+          let tenantId = buff[2];
+          let scadaId = buff[4];
+          // console.log(' [connection] Received %s', msg.content.toString());
+          events.emit('conn', tenantId, scadaId, msg.content.toString());
+        }, { noAck: true });
+      }
 
       channel = ch;
       callback(null);

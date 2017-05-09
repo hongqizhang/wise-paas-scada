@@ -62,7 +62,7 @@ module.exports.getRealData = (params, callback) => {
 };
 
 module.exports.upsertRealData = (params, callback) => {
-  if (!params.value) {
+  if (params.value === null || typeof params.value === 'object') {
     let err = 'value can not be null !';
     callback(err);
     return;
@@ -83,7 +83,7 @@ module.exports.upsertRealData = (params, callback) => {
 };
 
 module.exports.updateRealData = (params, callback) => {
-  if (!params.value) {
+  if (params.value === null || typeof params.value === 'object') {
     let err = 'value can not be null !';
     callback(err);
     return;
