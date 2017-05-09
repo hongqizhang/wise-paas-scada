@@ -51,7 +51,6 @@ module.exports.getRealData = (params, callback) => {
 
     Promise.all(promises)
     .then(function (results) {
-      console.log(results);
       callback(null, results);
     })
     .catch(function (err) {
