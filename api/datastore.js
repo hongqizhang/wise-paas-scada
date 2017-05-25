@@ -115,7 +115,8 @@ module.exports.upsertRealData = (param, callback) => {
   }
 
   let id = util.format('%s/%s/%s', param.scadaId, param.deviceId, param.tagName);
-  RealData.update({ _id: id }, { id: id, value: param.value, ts: new Date() }, { upsert: true }, function (err, result) {
+  let ts = param.ts || new Date();
+  RealData.update({ _id: id }, { id: id, value: param.value, ts: ts }, { upsert: true }, function (err, result) {
     if (err) {
       callback(err);
       return;
@@ -137,7 +138,8 @@ module.exports.updateRealData = (param, callback) => {
 
   if (mongodb && mongodb.isConnected()) {
     let id = util.format('%s/%s/%s', param.scadaId, param.deviceId, param.tagName);
-    RealData.update({ _id: id }, { value: param.value, ts: new Date() }, { upsert: false }, function (err, result) {
+    let ts = param.ts || new Date();
+    RealData.update({ _id: id }, { value: param.value, ts: ts }, { upsert: false }, function (err, result) {
       if (err) {
         callback(err);
         return;
@@ -189,7 +191,8 @@ module.exports.insertHistData = (param, callback) => {
   }
 
   let id = util.format('%s/%s/%s', param.scadaId, param.deviceId, param.tagName);
-  HistData.create({ _id: new mongodb.ObjectId(), id: id, value: param.value, ts: param.ts }, function (err, result) {
+  let ts = param.ts || new Date();
+  HistData.create({ _id: new mongodb.ObjectId(), id: id, value: param.value, ts: ts }, function (err, result) {
     if (err) {
       callback(err);
       return;
