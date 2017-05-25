@@ -22,13 +22,14 @@ const waamqp = wisePaasScada.waamqp;
 <a name="datastore"></a>
 ## datastore
 
-* <a href="#init"><code>datastore.<b>init()</b></code></a>
+* <a href="#init"><code>datastore.<b>init(options)</b></code></a>
 * <a href="#quit"><code>datastore.<b>quit()</b></code></a>
-* <a href="#getRealData"><code>datastore.<b>getRealData()</b></code></a>
-* <a href="#upsertRealData"><code>datastore.<b>upsertRealData()</b></code></a>
-* <a href="#updateRealData"><code>datastore.<b>updateRealData()</b></code></a>
-* <a href="#deleteRealDataByScadaId"><code>datastore.<b>deleteRealDataByScadaId()</b></code></a>
-
+* <a href="#getRealData"><code>datastore.<b>getRealData(tag array, [callback])</b></code></a>
+* <a href="#upsertRealData"><code>datastore.<b>upsertRealData(parameters, [callback])</b></code></a>
+* <a href="#updateRealData"><code>datastore.<b>updateRealData(parameters, [callback])</b></code></a>
+* <a href="#deleteRealDataByScadaId"><code>datastore.<b>deleteRealDataByScadaId(scadaId, [callback])</b></code></a>
+* <a href="#getHistData"><code>datastore.<b>getHistData()</b></code></a>
+* <a href="#insertHistData"><code>datastore.<b>insertHistData()</b></code></a>
 -------------------------------------------------------
 
 <a name="init"></a>
@@ -104,7 +105,8 @@ let t1 = {
   scadaId: 'scada1',
   deviceId: 'device1',
   tagName: 'Foo1',
-  value: 100
+  value: 100,
+  ts: new Date()
 };
 
 datastore.upsertRealData(t1, function (err, response) {
@@ -133,7 +135,8 @@ let t1 = {
   scadaId: 'scada1',
   deviceId: 'device1',
   tagName: 'Foo1',
-  value: 100
+  value: 100,
+  ts: new Date()
 };
 
 datastore.upsertRealData(t1, function (err, response) {
@@ -159,6 +162,68 @@ For example:
 ```js
 
 datastore.deleteRealDataByScadaId('scada1', function (err, response) {
+  if (err) {
+    console.error(err);
+  } else {
+    console.log('success: ' + response.ok);
+  }
+});
+
+```
+
+-------------------------------------------------------
+
+<a name="getHistData"></a>
+### datastore#getHistData(parameters, [callback])
+
+Get history tag data according to the input parameters.
+The callback is called when data has been gotten.
+
+For example:
+
+```js
+
+let t1 = {
+  scadaId: 'cda43195-7a0a-4903-a533-d333d8c5f9d9',
+  deviceId: 'P02_SCADA',
+  tagName: 'ATML_PACPRF:CTR',
+  startTs: new Date('2015-01-01'),
+  endTs: new Date(),
+  orderby: -1,
+  limit: 10
+};
+
+datastore.getHistData(t1, function (err, response) {
+  if (err) {
+    console.error(err);
+  } else {
+    console.log(response);
+  }
+});
+
+```
+
+-------------------------------------------------------
+
+<a name="insertHistData"></a>
+### datastore#insertHistData(parameters, [callback])
+
+Insert history tag data.
+The callback is called when data has been inserted.
+
+For example:
+
+```js
+
+let t1 = {
+  scadaId: 'cda43195-7a0a-4903-a533-d333d8c5f9d9',
+  deviceId: 'P02_SCADA',
+  tagName: 'ATML_PACPRF:CTR',
+  value: 100,
+  ts: new Date()
+};
+
+datastore.upsertRealData(t1, function (err, response) {
   if (err) {
     console.error(err);
   } else {
