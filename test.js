@@ -16,7 +16,7 @@ let amqpConf = {
   password: 'admin'
 };
 
-let amqpUri = util.format('%s://%s:%s@%s:%d', amqpConf.protocol, amqpConf.username, amqpConf.password, amqpConf.hostname, amqpConf.port);
+/* let amqpUri = util.format('%s://%s:%s@%s:%d', amqpConf.protocol, amqpConf.username, amqpConf.password, amqpConf.hostname, amqpConf.port);
 waamqp.connect(amqpUri, 'data', (err) => {
   if (err) {
     console.error(err);
@@ -29,7 +29,7 @@ waamqp.connect(amqpUri, 'data', (err) => {
       console.log(payload);
     });
   }
-});
+}); */
 
 let conf = {
   hostname: '172.16.12.211',
@@ -55,12 +55,46 @@ let dsParams2 = {
   value: 100
 };
 
-datastore.getRealData([dsParams1, dsParams2], function (err, result) {
+/*datastore.getRealData([dsParams1, dsParams2], function (err, result) {
   if (err) {
     console.error(err);
   } else {
     console.log('getRealData: ');
     console.log(result);
+  }
+}); */
+
+let histParam1 = {
+  scadaId: 'cda43195-7a0a-4903-a533-d333d8c5f9d9',
+  deviceId: 'P02_SCADA',
+  tagName: 'ATML_PACPRF:CTR',
+  value: 100,
+  ts: new Date()
+};
+let histQueryParam = {
+  scadaId: 'cda43195-7a0a-4903-a533-d333d8c5f9d9',
+  deviceId: 'P02_SCADA',
+  tagName: 'ATML_PACPRF:CTR',
+  startTs: new Date('2015-01-01'),
+  endTs: new Date(),
+  orderby: -1,
+  limit: 10
+};
+
+datastore.insertHistData(histParam1, function (err, result) {
+  if (err) {
+    console.error(err);
+  } else {
+    console.log('insertHistData: ');
+    console.log(result);
+    datastore.getHistData(histQueryParam, function (err, result) {
+      if (err) {
+        console.error(err);
+      } else {
+        console.log('getHistData: ');
+        console.log(result);
+      }
+    });
   }
 });
 
@@ -90,7 +124,7 @@ datastore.getRealData([dsParams1, dsParams2], function (err, result) {
   }
 }); */
 
-let id = 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce';
+/* let id = 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce';
 let dmParams = {
   status: true,
   freq: 5   // 5 seconds
@@ -111,6 +145,6 @@ deviceManager.upsertDeviceInfo(id, dmParams, function (err, result) {
       }
     });
   }
-});
+}); */
 
 // datastore.quit();

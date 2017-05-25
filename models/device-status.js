@@ -3,7 +3,7 @@
 const mongoose = require('mongoose');
 
 let Schema = mongoose.Schema;
-let deviceStatus = new Schema({
+let deviceStatusSchema = new Schema({
   _id: String,   // scadaId or deviceId
   status: Boolean,
   freq: Number,
@@ -12,6 +12,6 @@ let deviceStatus = new Schema({
     default: Date.now
   }
 }, { collection: 'SCADADeviceStatus', versionKey: false });
-mongoose.model('DeviceStatus', deviceStatus);
+mongoose.model('DeviceStatus', deviceStatusSchema);
 
 module.exports = mongoose.model('DeviceStatus');

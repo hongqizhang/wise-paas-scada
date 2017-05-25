@@ -2,6 +2,7 @@
 
 const util = require('util');
 const mongoose = require('mongoose');
+const Promise = require('promise');
 
 function _connect (conf) {
   if (!conf) {
@@ -13,6 +14,7 @@ function _connect (conf) {
     if (err) {
       console.error('[mongodb] ' + err);
     } else {
+      mongoose.Promise = Promise;
       mongoose.connection.on('connected', function () {
         console.log('[mongodb] connected !');
       });
@@ -43,6 +45,7 @@ function _isConnecting () {
   }
 }
 
+module.exports.ObjectId = mongoose.Types.ObjectId;
 module.exports.connect = _connect;
 module.exports.disconnect = _disconnect;
 module.exports.isConnected = _isConnected;

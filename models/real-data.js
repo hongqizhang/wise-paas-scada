@@ -3,7 +3,7 @@
 const mongoose = require('mongoose');
 
 let Schema = mongoose.Schema;
-let realData = new Schema({
+let realDataSchema = new Schema({
   _id: String,
   value: String,
   ts: {
@@ -12,6 +12,6 @@ let realData = new Schema({
   }
 }, { collection: 'SCADARealData', versionKey: false });
 
-mongoose.model('RealData', realData);
+mongoose.model('RealData', realDataSchema);
 
 module.exports = mongoose.model('RealData');
