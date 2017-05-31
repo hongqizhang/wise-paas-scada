@@ -8,7 +8,7 @@ const deviceManager = wisePaasScada.deviceManager;
 const waamqp = wisePaasScada.waamqp;
 
 // AMQP
-let amqpConf = {
+/* let amqpConf = {
   protocol: 'amqp',
   hostname: '172.16.12.211',
   port: 5672,
@@ -29,7 +29,7 @@ waamqp.connect(amqpUri, 'data', (err) => {
       console.log(payload);
     });
   }
-});
+}); */
 
 let conf = {
   hostname: '172.16.12.211',
@@ -42,6 +42,18 @@ let conf = {
 datastore.init(conf);
 deviceManager.init(conf);
 
+let arr = [];
+for (let i = 0; i < 1000; i++) {
+  arr.push(
+    {
+      scadaId: 'cda43195-7a0a-4903-a533-d333d8c5f9d9',
+      deviceId: 'P02_SCADA',
+      tagName: 'ATML_PACPRF:CTR',
+      value: 100,
+      ts: new Date('2015-01-01')
+    }
+  );
+}
 let dsParams1 = {
   scadaId: 'cda43195-7a0a-4903-a533-d333d8c5f9d9',
   deviceId: 'P02_SCADA',
@@ -56,16 +68,23 @@ let dsParams2 = {
   value: 100
 };
 
-datastore.getRealData([dsParams1, dsParams2], function (err, result) {
-  if (err) {
-    console.error(err);
-  } else {
-    console.log('getRealData: ');
-    console.log(result);
-  }
-});
+function _get () {
+  datastore.init(conf);
+  datastore.getRealData(arr, function (err, result) {
+    if (err) {
+      console.error(err);
+    } else {
+      console.log('getRealData: ');
+      // console.log(result);
+    }
+  });
 
-let histParam1 = {
+  setTimeout(_get, 1000);
+}
+
+_get();
+
+/* let histParam1 = {
   scadaId: 'cda43195-7a0a-4903-a533-d333d8c5f9d9',
   deviceId: 'P02_SCADA',
   tagName: 'ATML_PACPRF:CTR',
@@ -146,6 +165,6 @@ deviceManager.upsertDeviceInfo(id, dmParams, function (err, result) {
       }
     });
   }
-});
+}); */
 
 // datastore.quit();

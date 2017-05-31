@@ -1,6 +1,6 @@
 {
   "name": "wise-paas-scada",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "description": "wise-paas-scada is a utility node-module for WISE-PaaS SCADA.",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,7 @@
   "dependencies": {
     "amqplib": "^0.5.1",
     "events": "^1.1.1",
-    "mongoose": "^4.9.6",
+    "mongoose": "4.9.6",
     "promise": "^7.1.1"
   }
 }
