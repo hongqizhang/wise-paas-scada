@@ -1,5 +1,7 @@
 'use strict';
 
+const Promise = require('promise');
+
 const mongodb = require('../db/mongodb.js');
 const DeviceStatus = require('../models/device-status.js');
 
@@ -15,18 +17,43 @@ module.exports.quit = () => {
   }
 };
 
-module.exports.getDeviceStatus = (id, callback) => {
-  DeviceStatus.findOne({ _id: id }, function (err, result) {
-    if (err) {
-      callback(err);
-      return;
-    }
-    let response = {
-      id: id,
-      status: (result) ? result.status : false
-    };
-    callback(null, response);
+function _getDeviceStatus (id) {
+  return new Promise((resolve, reject) => {
+    DeviceStatus.findOne({ _id: id }, function (err, result) {
+      if (err) {
+        reject(err);
+        return;
+      }
+      let response = {
+        id: id,
+        status: (result) ? result.status : false
+      };
+      resolve(response);
+    });
   });
+}
+
+module.exports.getDeviceStatus = (ids, callback) => {
+  try {
+    let promises = [];
+    if (Array.isArray(ids)) {
+      for (var i = 0; i < ids.length; i++) {
+        promises.push(_getDeviceStatus.call(this, ids[i]));
+      }
+    } else {
+      promises.push(_getDeviceStatus.call(this, ids));
+    }
+
+    Promise.all(promises)
+    .then(function (results) {
+      callback(null, results);
+    })
+    .catch(function (err) {
+      callback(err);
+    });
+  } catch (err) {
+    callback(err);
+  }
 };
 
 module.exports.updateDeviceStatus = (id, status, callback) => {

@@ -15,16 +15,33 @@ function _getRealData (scadaId, deviceId, tagName) {
     RealData.findOne({ _id: id }, function (err, result) {
       if (err) {
         reject(err);
-      } else {
-        let data = {
-          scadaId: scadaId,
-          deviceId: deviceId,
-          tagName: tagName,
-          value: (result && result.value) ? result.value : '*',
-          ts: (result && result.ts) ? result.ts : new Date()
-        };
-        resolve(data);
+        return;
       }
+      let data = {
+        scadaId: scadaId,
+        deviceId: deviceId,
+        tagName: tagName,
+        value: (result && result.value) ? result.value : '*',
+        ts: (result && result.ts) ? result.ts : new Date()
+      };
+      resolve(data);
+    });
+  });
+}
+
+function _updateRealData (scadaId, deviceId, tagName, value, ts) {
+  return new Promise((resolve, reject) => {
+    let id = util.format('%s/%s/%s', scadaId, deviceId, tagName);
+    RealData.update({ _id: id }, { value: value, ts: ts }, { upsert: false }, function (err, result) {
+      if (err) {
+        reject(err);
+        return;
+      }
+      let response = { ok: false };
+      if (result && result.n) {
+        response.ok = (result.n === 1);
+      }
+      resolve(response);
     });
   });
 }
@@ -54,20 +71,20 @@ function _getHistData (param) {
       .exec(function (err, results) {
         if (err) {
           reject(err);
-        } else {
-          let outputs = [];
-          results.forEach((result) => {
-            let data = {
-              scadaId: scadaId,
-              deviceId: deviceId,
-              tagName: tagName,
-              value: (result && result.value) ? result.value : '*',
-              ts: (result && result.ts) ? result.ts : new Date()
-            };
-            outputs.push(data);
-          });
-          resolve(outputs);
+          return;
         }
+        let outputs = [];
+        results.forEach((result) => {
+          let data = {
+            scadaId: scadaId,
+            deviceId: deviceId,
+            tagName: tagName,
+            value: (result && result.value) ? result.value : '*',
+            ts: (result && result.ts) ? result.ts : new Date()
+          };
+          outputs.push(data);
+        });
+        resolve(outputs);
       });
   });
 }
@@ -84,15 +101,16 @@ module.exports.quit = () => {
   }
 };
 
-module.exports.getRealData = (params, callback) => {
+module.exports.getRealData = (obj, callback) => {
   try {
-    if (!Array.isArray(params)) {
-      throw new Error('Input format is wrong !');
-    }
     let promises = [];
-    for (var i = 0; i < params.length; i++) {
-      let param = params[i];
-      promises.push(_getRealData.call(this, param.scadaId, param.deviceId, param.tagName));
+    if (Array.isArray(obj)) {
+      for (var i = 0; i < obj.length; i++) {
+        let param = obj[i];
+        promises.push(_getRealData.call(this, param.scadaId, param.deviceId, param.tagName));
+      }
+    } else {
+      promises.push(_getRealData.call(this, obj.scadaId, obj.deviceId, obj.tagName));
     }
 
     Promise.all(promises)
@@ -108,15 +126,22 @@ module.exports.getRealData = (params, callback) => {
 };
 
 module.exports.upsertRealData = (param, callback) => {
-  if (param.value === null || typeof param.value === 'object') {
+  let type = typeof param.value;
+  if (param.value === null || type === 'undefined') {
     let err = 'value can not be null !';
     callback(err);
     return;
   }
+  /* if (Array.isArray(param.value)) {
+    let err = 'value format is wrong !';
+    callback(err);
+    return;
+  } */
 
   let id = util.format('%s/%s/%s', param.scadaId, param.deviceId, param.tagName);
   let ts = param.ts || new Date();
-  RealData.update({ _id: id }, { id: id, value: param.value, ts: ts }, { upsert: true }, function (err, result) {
+
+  RealData.update({ _id: id }, { value: param.value, ts: ts }, { upsert: true }, (err, result) => {
     if (err) {
       callback(err);
       return;
@@ -127,22 +152,32 @@ module.exports.upsertRealData = (param, callback) => {
     }
     callback(null, response);
   });
-};
 
-module.exports.updateRealData = (param, callback) => {
-  if (param.value === null || typeof param.value === 'object') {
-    let err = 'value can not be null !';
-    callback(err);
-    return;
-  }
-
-  if (mongodb && mongodb.isConnected()) {
-    let id = util.format('%s/%s/%s', param.scadaId, param.deviceId, param.tagName);
-    let ts = param.ts || new Date();
-    RealData.update({ _id: id }, { value: param.value, ts: ts }, { upsert: false }, function (err, result) {
+  /* if (type === 'object') {   // array tag
+    RealData.findOne({ _id: id }, (err, result) => {
       if (err) {
         callback(err);
-        return;
+      } else {
+        let newValue = (result && result.value && Array.isArray(result.value)) ? result.value : [];
+        for (let key in param.value) {
+          newValue[parseInt(key) - 1] = param.value[key];
+        }
+        RealData.update({ _id: id }, { value: newValue, ts: ts }, { upsert: true }, (err, result) => {
+          if (err) {
+            callback(err);
+          }
+          let response = { ok: false };
+          if (result && result.n) {
+            response.ok = (result.n === 1);
+          }
+          callback(null, response);
+        });
+      }
+    });
+  } else {
+    RealData.update({ _id: id }, { value: param.value, ts: ts }, { upsert: true }, (err, result) => {
+      if (err) {
+        callback(err);
       }
       let response = { ok: false };
       if (result && result.n) {
@@ -150,6 +185,57 @@ module.exports.updateRealData = (param, callback) => {
       }
       callback(null, response);
     });
+  } */
+};
+
+module.exports.updateRealData = (param, callback) => {
+  try {
+    let value = param.value;
+    if (typeof value !== 'number' && typeof value !== 'string' && Array.isArray(value) === false) {
+      let err = 'value can not be null !';
+      callback(err);
+      return;
+    }
+
+    let id = util.format('%s/%s/%s', param.scadaId, param.deviceId, param.tagName);
+    let ts = param.ts || new Date();
+
+    if (Array.isArray(value)) {   // array tag
+      RealData.findOne({ _id: id }, (err, result) => {
+        if (err) {
+          callback(err);
+          return;
+        }
+        let newValue = (result && result.value && Array.isArray(result.value)) ? result.value : [];
+        for (var key in param.value) {
+          newValue[key] = param.value[key];
+        }
+        RealData.update({ _id: id }, { value: newValue, ts: ts }, { upsert: false }, (err, result) => {
+          if (err) {
+            callback(err);
+          }
+          let response = { ok: false };
+          if (result && result.n) {
+            response.ok = (result.n === 1);
+          }
+          callback(null, response);
+        });
+      });
+    } else {
+      RealData.update({ _id: id }, { value: param.value, ts: ts }, { upsert: false }, (err, result) => {
+        if (err) {
+          callback(err);
+          return;
+        }
+        let response = { ok: false };
+        if (result && result.n) {
+          response.ok = (result.n === 1);
+        }
+        callback(null, response);
+      });
+    }
+  } catch (err) {
+    callback(err);
   }
 };
 
@@ -184,7 +270,8 @@ module.exports.getHistData = (param, callback) => {
 };
 
 module.exports.insertHistData = (param, callback) => {
-  if (param.value === null || typeof param.value === 'object') {
+  let value = param.value;
+  if (typeof value !== 'number' && typeof value !== 'string' && Array.isArray(value) === false) {
     let err = 'value can not be null !';
     callback(err);
     return;

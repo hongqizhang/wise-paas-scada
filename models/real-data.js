@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 let Schema = mongoose.Schema;
 let realDataSchema = new Schema({
   _id: String,
-  value: String,
+  value: Object,
   ts: {
     type: Date,
     default: Date.now

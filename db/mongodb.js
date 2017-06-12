@@ -7,20 +7,16 @@ const Promise = require('promise');
 function _connect (conf) {
   if (!conf) {
     console.error('[mongodb] no config !');
+    return;
   }
 
   mongoose.connect(util.format('mongodb://%s:%s@%s:%d/%s',
     conf.username, conf.password, conf.hostname, conf.port, conf.database), (err) => {
     if (err) {
-      console.error('[mongodb] ' + err);
+      console.error('[mongodb] Connect error ! ' + err);
     } else {
+      console.log('[mongodb] Connect success !');
       mongoose.Promise = Promise;
-      mongoose.connection.on('connected', function () {
-        console.log('[mongodb] connected !');
-      });
-      mongoose.connection.on('disconnected', function () {
-        console.log('[mongodb] disconnected !');
-      });
     }
   });
 }
