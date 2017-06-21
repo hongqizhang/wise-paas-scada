@@ -42,7 +42,9 @@ function _connect (uri, type, callback) {
       callback(err);
       return;
     }
-
+    conn.on('error', function (error) {
+      console.error('[AMQP] ' + error);
+    });
     connection = conn;
     connection.createChannel(function (err, ch) {
       if (err) {
