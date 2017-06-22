@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = {
+module.exports.amqpTopics = {
   configTopic: '/wisepaas/*/scada/*/cfg',   // /wisepaas/<tenantId>/scada/<scadaId>/cfg
   dataTopic: '/wisepaas/*/scada/*/data',
   connTopic: '/wisepaas/*/scada/*/conn',
@@ -16,4 +16,11 @@ module.exports = {
   drc_topic: 'iot-2/evt/wadrc/fmt/',
   drd_topic: 'iot-2/evt/wadrd/fmt/',
   drn_topic: 'iot-2/evt/wadrn/fmt/' */
+};
+
+module.exports.mqttTopics = {
+  configTopic: '/wisepaas/%s/scada/%s/cfg',   // /wisepaas/<tenantId>/scada/<scadaId>/cfg
+  dataTopic: '/wisepaas/%s/scada/%s/data',
+  connTopic: '/wisepaas/%s/scada/%s/conn',
+  cmdTopic: '/wisepaas/%s/scada/%s/cmd'
 };

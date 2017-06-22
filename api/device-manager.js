@@ -56,8 +56,8 @@ module.exports.getDeviceStatus = (ids, callback) => {
   }
 };
 
-module.exports.updateDeviceStatus = (id, status, callback) => {
-  DeviceStatus.update({ _id: id }, { status: status, ts: new Date() }, { upsert: false }, function (err, result) {
+module.exports.updateDeviceStatus = (id, status, ts, callback) => {
+  DeviceStatus.update({ _id: id }, { status: status, ts: ts || new Date() }, { upsert: false }, function (err, result) {
     if (err) {
       callback(err);
       return;
@@ -71,7 +71,7 @@ module.exports.updateDeviceStatus = (id, status, callback) => {
 };
 
 module.exports.upsertDeviceInfo = (id, params, callback) => {
-  DeviceStatus.update({ _id: id }, { _id: id, status: params.status, freq: params.freq, ts: new Date() }, { upsert: true }, function (err, result) {
+  DeviceStatus.update({ _id: id }, { _id: id, status: params.status, freq: params.freq, ts: params.ts || new Date() }, { upsert: true }, function (err, result) {
     if (err) {
       callback(err);
       return;

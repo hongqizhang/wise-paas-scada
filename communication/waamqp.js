@@ -2,7 +2,9 @@
 
 const amqp = require('amqplib/callback_api');
 const EventEmitter = require('events');
-const watopics = require('../common/watopics.js');
+const waTopics = require('../common/watopics.js');
+
+const amqpTopics = waTopics.amqpTopics;
 
 const waCfgQ = 'waCfgQ';
 const waDataQ = 'waDataQ';
@@ -55,7 +57,7 @@ function _connect (uri, type, callback) {
       if (type === 'config') {
         ch.assertQueue(waCfgQ, { durable: true });
         // binding mqtt topic to queue, and '/' must be replaced to '.' in topic
-        ch.bindQueue(waCfgQ, exchangeName, watopics.configTopic.replace(/\//g, '.'));
+        ch.bindQueue(waCfgQ, exchangeName, amqpTopics.configTopic.replace(/\//g, '.'));
 
         ch.prefetch(1);
 
@@ -74,9 +76,9 @@ function _connect (uri, type, callback) {
         ch.assertQueue(waConnQ, { durable: true });
         ch.assertQueue(waCmdQ, { durable: true });
         // binding mqtt topic to queue, and '/' must be replaced to '.' in topic
-        ch.bindQueue(waDataQ, exchangeName, watopics.dataTopic.replace(/\//g, '.'));
-        ch.bindQueue(waConnQ, exchangeName, watopics.connTopic.replace(/\//g, '.'));
-        ch.bindQueue(waCmdQ, exchangeName, watopics.cmdTopic.replace(/\//g, '.'));
+        ch.bindQueue(waDataQ, exchangeName, amqpTopics.dataTopic.replace(/\//g, '.'));
+        ch.bindQueue(waConnQ, exchangeName, amqpTopics.connTopic.replace(/\//g, '.'));
+        ch.bindQueue(waCmdQ, exchangeName, amqpTopics.cmdTopic.replace(/\//g, '.'));
 
         ch.prefetch(1);
 
@@ -157,7 +159,7 @@ module.exports.publish = _publish;
         ch.assertQueue(waQ, { durable: true });
 
         // binding mqtt topic to queue, and '/' must be replaced to '.' in topic
-        ch.bindQueue(waQ, exchangeName, watopics.scada_topic.replace(/\//g, '.'));
+        ch.bindQueue(waQ, exchangeName, amqpTopics.scada_topic.replace(/\//g, '.'));
         ch.prefetch(1);
         // /wisepaas/general/scada/<scadaId>/cfg
         ch.consume(waQ, function (msg) {
