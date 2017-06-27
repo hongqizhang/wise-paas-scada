@@ -21,7 +21,7 @@ function _getRealData (scadaId, deviceId, tagName) {
         scadaId: scadaId,
         deviceId: deviceId,
         tagName: tagName,
-        value: (result && result.value) ? result.value : '*',
+        value: (result && typeof result.value !== 'undefined') ? result.value : '*',
         ts: (result && result.ts) ? result.ts : new Date()
       };
       resolve(data);
@@ -79,7 +79,7 @@ function _getHistData (param) {
             scadaId: scadaId,
             deviceId: deviceId,
             tagName: tagName,
-            value: (result && result.value) ? result.value : '*',
+            value: (result && typeof result.value !== 'undefined') ? result.value : '*',
             ts: (result && result.ts) ? result.ts : new Date()
           };
           outputs.push(data);

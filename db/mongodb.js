@@ -11,14 +11,12 @@ function _connect (conf) {
   }
 
   mongoose.connect(util.format('mongodb://%s:%s@%s:%d/%s',
-    conf.username, conf.password, conf.hostname, conf.port, conf.database), (err) => {
-    if (err) {
-      console.error('[mongodb] Connect error ! ' + err);
-    } else {
-      console.log('[mongodb] Connect success !');
-      mongoose.Promise = Promise;
-    }
-  });
+    conf.username, conf.password, conf.hostname, conf.port, conf.database));
+
+  mongoose.Promise = Promise;
+  let db = mongoose.connection;
+  db.once('open', () => { console.log('[mongodb] Connect success !'); });
+  db.on('error', (err) => { console.error('[mongodb] Connect error ! ' + err); });
 }
 
 function _disconnect () {
