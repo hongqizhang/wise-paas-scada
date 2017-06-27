@@ -103,23 +103,28 @@ module.exports.quit = () => {
 
 module.exports.getRealData = (obj, callback) => {
   try {
-    let promises = [];
     if (Array.isArray(obj)) {
+      let promises = [];
       for (var i = 0; i < obj.length; i++) {
         let param = obj[i];
         promises.push(_getRealData.call(this, param.scadaId, param.deviceId, param.tagName));
       }
+      Promise.all(promises)
+      .then(function (results) {
+        callback(null, results);
+      })
+      .catch(function (err) {
+        callback(err);
+      });
     } else {
-      promises.push(_getRealData.call(this, obj.scadaId, obj.deviceId, obj.tagName));
+      _getRealData.call(this, obj.scadaId, obj.deviceId, obj.tagName)
+      .then(function (result) {
+        callback(null, result);
+      })
+      .catch(function (err) {
+        callback(err);
+      });
     }
-
-    Promise.all(promises)
-    .then(function (results) {
-      callback(null, results);
-    })
-    .catch(function (err) {
-      callback(err);
-    });
   } catch (err) {
     callback(err);
   }

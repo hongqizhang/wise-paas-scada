@@ -26,7 +26,8 @@ function _getDeviceStatus (id) {
       }
       let response = {
         id: id,
-        status: (result) ? result.status : false
+        status: (result) ? result.status : false,
+        ts: (result) ? result.ts : new Date()
       };
       resolve(response);
     });
@@ -35,22 +36,27 @@ function _getDeviceStatus (id) {
 
 module.exports.getDeviceStatus = (ids, callback) => {
   try {
-    let promises = [];
     if (Array.isArray(ids)) {
+      let promises = [];
       for (var i = 0; i < ids.length; i++) {
         promises.push(_getDeviceStatus.call(this, ids[i]));
       }
+      Promise.all(promises)
+      .then(function (results) {
+        callback(null, results);
+      })
+      .catch(function (err) {
+        callback(err);
+      });
     } else {
-      promises.push(_getDeviceStatus.call(this, ids));
+      _getDeviceStatus.call(this, ids)
+      .then(function (result) {
+        callback(null, result);
+      })
+      .catch(function (err) {
+        callback(err);
+      });
     }
-
-    Promise.all(promises)
-    .then(function (results) {
-      callback(null, results);
-    })
-    .catch(function (err) {
-      callback(err);
-    });
   } catch (err) {
     callback(err);
   }
