@@ -137,11 +137,6 @@ module.exports.upsertRealData = (param, callback) => {
     callback(err);
     return;
   }
-  /* if (Array.isArray(param.value)) {
-    let err = 'value format is wrong !';
-    callback(err);
-    return;
-  } */
 
   let id = util.format('%s/%s/%s', param.scadaId, param.deviceId, param.tagName);
   let ts = param.ts || new Date();
@@ -157,46 +152,12 @@ module.exports.upsertRealData = (param, callback) => {
     }
     callback(null, response);
   });
-
-  /* if (type === 'object') {   // array tag
-    RealData.findOne({ _id: id }, (err, result) => {
-      if (err) {
-        callback(err);
-      } else {
-        let newValue = (result && result.value && Array.isArray(result.value)) ? result.value : [];
-        for (let key in param.value) {
-          newValue[parseInt(key) - 1] = param.value[key];
-        }
-        RealData.update({ _id: id }, { value: newValue, ts: ts }, { upsert: true }, (err, result) => {
-          if (err) {
-            callback(err);
-          }
-          let response = { ok: false };
-          if (result && result.n) {
-            response.ok = (result.n === 1);
-          }
-          callback(null, response);
-        });
-      }
-    });
-  } else {
-    RealData.update({ _id: id }, { value: param.value, ts: ts }, { upsert: true }, (err, result) => {
-      if (err) {
-        callback(err);
-      }
-      let response = { ok: false };
-      if (result && result.n) {
-        response.ok = (result.n === 1);
-      }
-      callback(null, response);
-    });
-  } */
 };
 
 module.exports.updateRealData = (param, callback) => {
   try {
-    let value = param.value;
-    if (typeof value !== 'number' && typeof value !== 'string' && Array.isArray(value) === false) {
+    let type = typeof param.value;
+    if (param.value === null || type === 'undefined') {
       let err = 'value can not be null !';
       callback(err);
       return;
@@ -205,7 +166,7 @@ module.exports.updateRealData = (param, callback) => {
     let id = util.format('%s/%s/%s', param.scadaId, param.deviceId, param.tagName);
     let ts = param.ts || new Date();
 
-    if (Array.isArray(value)) {   // array tag
+    if (Array.isArray(param.value)) {   // array tag
       RealData.findOne({ _id: id }, (err, result) => {
         if (err) {
           callback(err);
@@ -275,8 +236,8 @@ module.exports.getHistData = (param, callback) => {
 };
 
 module.exports.insertHistData = (param, callback) => {
-  let value = param.value;
-  if (typeof value !== 'number' && typeof value !== 'string' && Array.isArray(value) === false) {
+  let type = typeof param.value;
+  if (param.value === null || type === 'undefined') {
     let err = 'value can not be null !';
     callback(err);
     return;

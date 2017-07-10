@@ -7,6 +7,7 @@ let deviceStatusSchema = new Schema({
   _id: String,   // scadaId or deviceId
   status: Boolean,
   freq: Number,
+  modified: Boolean,
   ts: {
     type: Date,
     default: Date.now
