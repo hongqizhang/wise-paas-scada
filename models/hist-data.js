@@ -8,7 +8,7 @@ let histDataSchema = new Schema({
     type: Schema.Types.ObjectId
   },
   id: String,
-  value: String,
+  value: Object,
   ts: {
     type: Date,
     default: Date.now
