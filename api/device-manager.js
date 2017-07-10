@@ -26,8 +26,8 @@ function _getDeviceStatus (id) {
       }
       let response = {
         id: id,
-        status: (result) ? result.status : false,
-        modified: (result) ? result.modified : false,
+        status: (result && typeof result.status !== 'undefined') ? result.status : false,
+        modified: (result && typeof result.modified !== 'undefined') ? result.modified : false,
         ts: (result) ? result.ts : new Date()
       };
       resolve(response);
