@@ -166,7 +166,7 @@ module.exports.updateRealData = (param, callback) => {
     let id = util.format('%s/%s/%s', param.scadaId, param.deviceId, param.tagName);
     let ts = param.ts || new Date();
 
-    if (Array.isArray(param.value)) {   // array tag
+    if (type === 'object') {  // array tag
       RealData.findOne({ _id: id }, (err, result) => {
         if (err) {
           callback(err);
