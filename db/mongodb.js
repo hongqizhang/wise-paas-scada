@@ -2,7 +2,7 @@
 
 const util = require('util');
 const mongoose = require('mongoose');
-const Promise = require('promise');
+const Promise = require('bluebird');
 
 function _connect (conf) {
   if (!conf) {

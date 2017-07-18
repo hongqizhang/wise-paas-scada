@@ -1,6 +1,6 @@
 'use strict';
 
-const Promise = require('promise');
+const Promise = require('bluebird');
 
 const mongodb = require('../db/mongodb.js');
 const DeviceStatus = require('../models/device-status.js');
