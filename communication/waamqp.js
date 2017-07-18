@@ -74,17 +74,17 @@ function _connect (uri, type, callback) {
             if (buff.length !== 6) {
               return;
             }
-            let tenantId = buff[2];
-            let scadaId = buff[4];
-            events.emit('config', tenantId, scadaId, msg.content.toString());
+            msg.tenantId = buff[2];
+            msg.scadaId = buff[4];
+            events.emit('config', msg);
           }, { noAck: false });
           ch.consume(amqpQueue.notifyQ, function (msg) {
             let buff = msg.fields.routingKey.split('.');
             if (buff.length !== 4) {
               return;
             }
-            let tenantId = buff[2];
-            events.emit('notify', tenantId, msg.content.toString());
+            msg.tenantId = buff[2];
+            events.emit('notify', msg);
           }, { noAck: false });
           break;
         case 'data':
