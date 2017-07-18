@@ -1,7 +1,7 @@
 'use strict';
 
 const util = require('util');
-const Promise = require('promise');
+const Promise = require('bluebird');
 
 const mongodb = require('../db/mongodb.js');
 const RealData = require('../models/real-data.js');
