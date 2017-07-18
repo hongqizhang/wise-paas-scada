@@ -5,18 +5,15 @@ const EventEmitter = require('events');
 const waTopics = require('../common/watopics.js');
 
 const amqpTopics = waTopics.amqpTopics;
+const amqpQueue = waTopics.amqpQueue;
 
-const waCfgQ = 'waCfgQ';
-const waDataQ = 'waDataQ';
-const waConnQ = 'waConnQ';
-const waCmdQ = 'waCmdQ';
 const exchangeName = 'amq.topic';
 
 let events = new EventEmitter();
 let connection = null;
 let channel = null;
 
-function _publish (topic, message, options) {
+function _publish (topic, message) {
   if (channel) {
     let routingKey = topic.replace(/\//g, '.');
     let content = JSON.stringify(message);
@@ -38,14 +35,17 @@ function _connect (uri, type, callback) {
     password: conf.username
   }; */
 
-  amqp.connect(uri, function (err, conn) {
+  amqp.connect(uri, (err, conn) => {
     if (err) {
       console.error('[AMQPConnectError] ' + err);
-      callback(err);
-      return;
+      return callback(err);
     }
-    conn.on('error', function (error) {
+    conn.on('error', (error) => {
       console.error('[AMQP] ' + error);
+    });
+    conn.on('close', () => {
+      console.error('[AMQP] Connection close ! Reconnecting....');
+      setTimeout(_connect(uri, type, callback), 1000);
     });
     connection = conn;
     connection.createChannel(function (err, ch) {
@@ -53,56 +53,78 @@ function _connect (uri, type, callback) {
         callback(err);
         return;
       }
-
-      if (type === 'config') {
-        ch.assertQueue(waCfgQ, { durable: true });
-        // binding mqtt topic to queue, and '/' must be replaced to '.' in topic
-        ch.bindQueue(waCfgQ, exchangeName, amqpTopics.configTopic.replace(/\//g, '.'));
-
-        ch.prefetch(1);
-
-        ch.consume(waCfgQ, function (msg) {
-          let buff = msg.fields.routingKey.split('.');
-          if (buff.length !== 6) {
-            return;
-          }
-          let tenantId = buff[2];
-          let scadaId = buff[4];
-          // console.log(' [cfg] Received %s', msg.content.toString());
-          events.emit('config', tenantId, scadaId, msg.content.toString());
-        }, { noAck: true });
-      } else {
-        ch.assertQueue(waDataQ, { durable: true });
-        ch.assertQueue(waConnQ, { durable: true });
-        ch.assertQueue(waCmdQ, { durable: true });
-        // binding mqtt topic to queue, and '/' must be replaced to '.' in topic
-        ch.bindQueue(waDataQ, exchangeName, amqpTopics.dataTopic.replace(/\//g, '.'));
-        ch.bindQueue(waConnQ, exchangeName, amqpTopics.connTopic.replace(/\//g, '.'));
-        ch.bindQueue(waCmdQ, exchangeName, amqpTopics.cmdTopic.replace(/\//g, '.'));
-
-        ch.prefetch(1);
-
-        ch.consume(waDataQ, function (msg) {
-          let buff = msg.fields.routingKey.split('.');
-          if (buff.length !== 6) {
-            return;
-          }
-          let tenantId = buff[2];
-          let scadaId = buff[4];
-          // console.log(' [data] Received %s', msg.content.toString());
-          events.emit('data', tenantId, scadaId, msg.content.toString());
-        }, { noAck: true });
-
-        ch.consume(waConnQ, function (msg) {
-          let buff = msg.fields.routingKey.split('.');
-          if (buff.length !== 6) {
-            return;
-          }
-          let tenantId = buff[2];
-          let scadaId = buff[4];
-          // console.log(' [connection] Received %s', msg.content.toString());
-          events.emit('conn', tenantId, scadaId, msg.content.toString());
-        }, { noAck: true });
+      // options.type
+      switch (type) {
+        case 'config':
+          ch.assertQueue(amqpQueue.cfgQ, { durable: true });
+          ch.assertQueue(amqpQueue.notifyQ, { durable: true });
+          // binding mqtt topic to queue, and '/' must be replaced to '.' in topic
+          ch.bindQueue(amqpQueue.cfgQ, exchangeName, amqpTopics.configTopic.replace(/\//g, '.'));
+          ch.bindQueue(amqpQueue.notifyQ, exchangeName, amqpTopics.configTopic.replace(/\//g, '.'));
+          ch.prefetch(1);
+          ch.consume(amqpQueue.cfgQ, function (msg) {
+            let buff = msg.fields.routingKey.split('.');
+            if (buff.length !== 6) {
+              return;
+            }
+            let tenantId = buff[2];
+            let scadaId = buff[4];
+            events.emit('config', tenantId, scadaId, msg.content.toString());
+          }, { noAck: true });
+          ch.consume(amqpQueue.notifyQ, function (msg) {
+            let buff = msg.fields.routingKey.split('.');
+            if (buff.length !== 4) {
+              return;
+            }
+            let tenantId = buff[2];
+            events.emit('notify', tenantId, msg.content.toString());
+          }, { noAck: true });
+          break;
+        case 'data':
+          ch.assertQueue(amqpQueue.dataQ, { durable: true });
+          ch.assertQueue(amqpQueue.connQ, { durable: true });
+          ch.assertQueue(amqpQueue.cmdQ, { durable: true });
+          // binding mqtt topic to queue, and '/' must be replaced to '.' in topic
+          ch.bindQueue(amqpQueue.dataQ, exchangeName, amqpTopics.dataTopic.replace(/\//g, '.'));
+          ch.bindQueue(amqpQueue.connQ, exchangeName, amqpTopics.connTopic.replace(/\//g, '.'));
+          ch.bindQueue(amqpQueue.cmdQ, exchangeName, amqpTopics.cmdTopic.replace(/\//g, '.'));
+          ch.prefetch(1);
+          ch.consume(amqpQueue.dataQ, function (msg) {
+            let buff = msg.fields.routingKey.split('.');
+            if (buff.length !== 6) {
+              return;
+            }
+            let tenantId = buff[2];
+            let scadaId = buff[4];
+            events.emit('data', tenantId, scadaId, msg.content.toString());
+          }, { noAck: true });
+          ch.consume(amqpQueue.connQ, function (msg) {
+            let buff = msg.fields.routingKey.split('.');
+            if (buff.length !== 6) {
+              return;
+            }
+            let tenantId = buff[2];
+            let scadaId = buff[4];
+            events.emit('conn', tenantId, scadaId, msg.content.toString());
+          }, { noAck: true });
+          break;
+        /* case 'plugin':
+          // custom definition queue, for example: '/wisepaas/<tenantId>/scada/<appId>/ack'
+          ch.assertQueue(options.queue, { durable: true });
+          ch.bindQueue(options.queue, exchangeName, options.queue.replace(/\//g, '.'));
+          ch.prefetch(1);
+          ch.consume(options.queue, function (msg) {
+            let buff = msg.fields.routingKey.split('.');
+            if (buff.length !== 6) {
+              return;
+            }
+            let tenantId = buff[2];
+            let appId = buff[4];
+            events.emit('message', tenantId, appId, msg.content.toString());
+          }, { noAck: true });
+          break; */
+        default:
+          break;
       }
 
       channel = ch;
@@ -124,85 +146,3 @@ module.exports.events = events;
 module.exports.connect = _connect;
 module.exports.close = _close;
 module.exports.publish = _publish;
-
-/* class WaAMQP {
-  constructor () {
-    this.events = new EventEmitter();
-    this.conn = null;
-    this.channel = null;
-  }
-
-  connect (conf) {
-    let deferred = Q.defer();
-    let url = {
-      protocol: 'amqp',
-      hostname: conf.hostname || '127.0.0.1',
-      port: conf.port || 5672,
-      username: conf.username,
-      password: conf.username
-    };
-
-    let self = this;
-    amqp.connect(url, function (err, conn) {
-      if (err) {
-        deferred.reject(err);
-        return deferred.promise;
-      }
-
-      self.conn = conn;
-      conn.createChannel(function (err, ch) {
-        if (err) {
-          deferred.reject(err);
-          return deferred.promise;
-        }
-
-        ch.assertQueue(waQ, { durable: true });
-
-        // binding mqtt topic to queue, and '/' must be replaced to '.' in topic
-        ch.bindQueue(waQ, exchangeName, amqpTopics.scada_topic.replace(/\//g, '.'));
-        ch.prefetch(1);
-        // /wisepaas/general/scada/<scadaId>/cfg
-        ch.consume(waQ, function (msg) {
-          let buff = msg.fields.routingKey.split('.');
-          if (buff.length !== 6) {
-            return;
-          }
-          let tenantID = buff[2];
-          let scadaId = buff[4];
-
-          switch (buff[buff.length - 1]) {
-            case 'cfg':
-              console.log(' [cfg] Received %s', msg.content.toString());
-              this.events.emit('config', tenantID, scadaId, msg.content.toString());
-              break;
-            case 'data':
-              console.log(' [data] Received %s', msg.content.toString());
-              self.events.emit('data', tenantID, scadaId, msg.content.toString());
-              break;
-            case 'conn':
-              console.log(' [connection] Received %s', msg.content.toString());
-              self.events.emit('conn', tenantID, scadaId, msg.content.toString());
-              break;
-          }
-        }, { noAck: true });
-
-        self.channel = ch;
-
-        deferred.resolve();
-      });
-    });
-
-    return deferred.promise;
-  }
-
-  close () {
-    if (this.channel) {
-      this.channel.close();
-    }
-    if (this.conn) {
-      this.conn.close();
-    }
-  }
-}
-
-module.exports = WaAMQP; */
