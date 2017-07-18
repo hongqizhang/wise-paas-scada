@@ -2,12 +2,23 @@
 
 const mongoose = require('mongoose');
 
+const defaultHbtFreq = 5;
+
 let Schema = mongoose.Schema;
 let deviceStatusSchema = new Schema({
   _id: String,   // scadaId or deviceId
-  status: Boolean,
-  freq: Number,
-  modified: Boolean,
+  status: {
+    type: Boolean,
+    default: false
+  },
+  freq: {
+    type: Number,
+    default: defaultHbtFreq
+  },
+  modified: {
+    type: Boolean,
+    default: false
+  },
   ts: {
     type: Date,
     default: Date.now
