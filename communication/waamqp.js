@@ -26,6 +26,13 @@ function _publish (topic, message) {
   }
 }
 
+function _ack (msg, all) {
+  if (channel) {
+    let allUpTo = all || false;
+    channel.ack(msg, allUpTo);
+  }
+}
+
 function _connect (uri, type, callback) {
   /* let url = {
     protocol: 'amqp',
@@ -70,7 +77,7 @@ function _connect (uri, type, callback) {
             let tenantId = buff[2];
             let scadaId = buff[4];
             events.emit('config', tenantId, scadaId, msg.content.toString());
-          }, { noAck: true });
+          }, { noAck: false });
           ch.consume(amqpQueue.notifyQ, function (msg) {
             let buff = msg.fields.routingKey.split('.');
             if (buff.length !== 4) {
@@ -78,7 +85,7 @@ function _connect (uri, type, callback) {
             }
             let tenantId = buff[2];
             events.emit('notify', tenantId, msg.content.toString());
-          }, { noAck: true });
+          }, { noAck: false });
           break;
         case 'data':
           ch.assertQueue(amqpQueue.dataQ, { durable: true });
@@ -94,19 +101,19 @@ function _connect (uri, type, callback) {
             if (buff.length !== 6) {
               return;
             }
-            let tenantId = buff[2];
-            let scadaId = buff[4];
-            events.emit('data', tenantId, scadaId, msg.content.toString());
-          }, { noAck: true });
+            msg.tenantId = buff[2];
+            msg.scadaId = buff[4];
+            events.emit('data', msg);
+          }, { noAck: false });
           ch.consume(amqpQueue.connQ, function (msg) {
             let buff = msg.fields.routingKey.split('.');
             if (buff.length !== 6) {
               return;
             }
-            let tenantId = buff[2];
-            let scadaId = buff[4];
-            events.emit('conn', tenantId, scadaId, msg.content.toString());
-          }, { noAck: true });
+            msg.tenantId = buff[2];
+            msg.scadaId = buff[4];
+            events.emit('conn', msg);
+          }, { noAck: false });
           break;
         /* case 'plugin':
           // custom definition queue, for example: '/wisepaas/<tenantId>/scada/<appId>/ack'
@@ -121,7 +128,7 @@ function _connect (uri, type, callback) {
             let tenantId = buff[2];
             let appId = buff[4];
             events.emit('message', tenantId, appId, msg.content.toString());
-          }, { noAck: true });
+          }, { noAck: false });
           break; */
         default:
           break;
@@ -146,3 +153,4 @@ module.exports.events = events;
 module.exports.connect = _connect;
 module.exports.close = _close;
 module.exports.publish = _publish;
+module.exports.ack = _ack;
