@@ -67,7 +67,7 @@ function _connect (uri, type, callback) {
           ch.assertQueue(amqpQueue.notifyQ, { durable: true });
           // binding mqtt topic to queue, and '/' must be replaced to '.' in topic
           ch.bindQueue(amqpQueue.cfgQ, exchangeName, amqpTopics.configTopic.replace(/\//g, '.'));
-          ch.bindQueue(amqpQueue.notifyQ, exchangeName, amqpTopics.configTopic.replace(/\//g, '.'));
+          ch.bindQueue(amqpQueue.notifyQ, exchangeName, amqpTopics.notifyTopic.replace(/\//g, '.'));
           ch.prefetch(1);
           ch.consume(amqpQueue.cfgQ, function (msg) {
             let buff = msg.fields.routingKey.split('.');
@@ -80,10 +80,11 @@ function _connect (uri, type, callback) {
           }, { noAck: false });
           ch.consume(amqpQueue.notifyQ, function (msg) {
             let buff = msg.fields.routingKey.split('.');
-            if (buff.length !== 4) {
+            if (buff.length !== 6) {
               return;
             }
             msg.tenantId = buff[2];
+            msg.appId = buff[4];
             events.emit('notify', msg);
           }, { noAck: false });
           break;
@@ -91,9 +92,11 @@ function _connect (uri, type, callback) {
           ch.assertQueue(amqpQueue.dataQ, { durable: true });
           ch.assertQueue(amqpQueue.connQ, { durable: true });
           ch.assertQueue(amqpQueue.cmdQ, { durable: true });
+
+          ch.unbindQueue(amqpQueue.connQ, exchangeName, amqpTopics.connTopic.replace(/\//g, '.'));
           // binding mqtt topic to queue, and '/' must be replaced to '.' in topic
           ch.bindQueue(amqpQueue.dataQ, exchangeName, amqpTopics.dataTopic.replace(/\//g, '.'));
-          ch.bindQueue(amqpQueue.connQ, exchangeName, amqpTopics.connTopic.replace(/\//g, '.'));
+          // ch.bindQueue(amqpQueue.connQ, exchangeName, amqpTopics.connTopic.replace(/\//g, '.'));
           ch.bindQueue(amqpQueue.cmdQ, exchangeName, amqpTopics.cmdTopic.replace(/\//g, '.'));
           ch.prefetch(1);
           ch.consume(amqpQueue.dataQ, function (msg) {
@@ -115,21 +118,20 @@ function _connect (uri, type, callback) {
             events.emit('conn', msg);
           }, { noAck: false });
           break;
-        /* case 'plugin':
-          // custom definition queue, for example: '/wisepaas/<tenantId>/scada/<appId>/ack'
-          ch.assertQueue(options.queue, { durable: true });
-          ch.bindQueue(options.queue, exchangeName, options.queue.replace(/\//g, '.'));
+        case 'plugin':
+          /* ch.assertQueue(amqpQueue.ackQ, { durable: true });
+          ch.bindQueue(amqpQueue.ackQ, exchangeName, amqpTopics.cfgAckTopic.replace(/\//g, '.'));
           ch.prefetch(1);
-          ch.consume(options.queue, function (msg) {
+          ch.consume(amqpQueue.msgQ, function (msg) {
             let buff = msg.fields.routingKey.split('.');
             if (buff.length !== 6) {
               return;
             }
-            let tenantId = buff[2];
-            let appId = buff[4];
-            events.emit('message', tenantId, appId, msg.content.toString());
-          }, { noAck: false });
-          break; */
+            msg.tenantId = buff[2];
+            msg.appId = buff[4];
+            events.emit('cfgack', msg);
+          }, { noAck: false }); */
+          break;
         default:
           break;
       }
@@ -149,8 +151,10 @@ function _close () {
   }
 }
 
-module.exports.events = events;
-module.exports.connect = _connect;
-module.exports.close = _close;
-module.exports.publish = _publish;
-module.exports.ack = _ack;
+module.exports = {
+  events: events,
+  connect: _connect,
+  close: _close,
+  publish: _publish,
+  ack: _ack
+};
