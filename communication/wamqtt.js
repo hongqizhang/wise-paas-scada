@@ -28,7 +28,7 @@ conf = {
 	username:"xxx",
 	password:"xxx",
 	reconnectPeriod: 1000,
-	protocol: 1, 2 or 3 // tcp, ws, wss
+	protocol: 1, 2 or 3 // mqtt, ws, wss
 };
 */
 
@@ -69,9 +69,9 @@ function _connect (conf) {
     rejectUnauthorized: false
   };
 
-  if (!conf.tls || conf.tls === 1) {
-    client = mqtt.connect('tcp://' + conf.host, tcpOptions);
-  } else if (conf.tls === 2) {
+  if (!conf.protocol || conf.protocol === 1) {
+    client = mqtt.connect('mqtt://' + conf.host, tcpOptions);
+  } else if (conf.protocol === 2) {
     client = mqtt.connect('ws://' + conf.host, wsOptions);
   } else {
     client = mqtt.connect('wss://' + conf.host, wssOptions);
