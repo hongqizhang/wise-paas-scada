@@ -22,7 +22,7 @@ function __getRealData (scadaId, deviceId, tagName) {
         deviceId: deviceId,
         tagName: tagName,
         value: (result && typeof result.value !== 'undefined') ? result.value : '*',
-        ts: (result && result.ts) ? result.ts : new Date()
+        ts: (result && result.ts) ? result.ts : ''
       };
       resolve(data);
     });
