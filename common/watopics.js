@@ -22,6 +22,7 @@ module.exports.mqttTopics = {
   connTopic: '/wisepaas/%s/scada/%s/conn',
   cmdTopic: '/wisepaas/%s/scada/%s/cmd',
   ackTopic: '/wisepaas/%s/scada/%s/ack',
+  cfgackTopic: '/wisepaas/%s/scada/%s/cfgack',
   notifyTopic: '/wisepaas/%s/scada/%s/notify'         // for cloud app to notify worker
 
 };
