@@ -15,16 +15,16 @@ function __getRealData (scadaId, deviceId, tagName) {
     RealData.findOne({ _id: id }, function (err, result) {
       if (err) {
         reject(err);
-        return;
+      } else {
+        let data = {
+          scadaId: scadaId,
+          deviceId: deviceId,
+          tagName: tagName,
+          value: (result && typeof result.value !== 'undefined') ? result.value : '*',
+          ts: (result && result.ts) ? result.ts : ''
+        };
+        resolve(data);
       }
-      let data = {
-        scadaId: scadaId,
-        deviceId: deviceId,
-        tagName: tagName,
-        value: (result && typeof result.value !== 'undefined') ? result.value : '*',
-        ts: (result && result.ts) ? result.ts : ''
-      };
-      resolve(data);
     });
   });
 }
