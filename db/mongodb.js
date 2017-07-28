@@ -11,15 +11,11 @@ function _connect (conf) {
   }
 
   let options = {
-    db: { native_parser: true },
-    server: {
-      auto_reconnect: true,
-      poolSize: 5,
-      socketOptions: {
-        connectTimeoutMS: 30000,
-        socketTimeoutMS: 30000
-      }
-    }
+    useMongoClient: true,
+    autoReconnect: true,
+    poolSize: 5,
+    connectTimeoutMS: 30000,
+    socketTimeoutMS: 30000
   };
   mongoose.connect(util.format('mongodb://%s:%s@%s:%d/%s',
     conf.username, conf.password, conf.hostname, conf.port, conf.database), options);
