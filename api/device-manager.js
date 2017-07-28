@@ -6,7 +6,7 @@ const mongodb = require('../db/mongodb.js');
 const DeviceStatus = require('../models/device-status.js');
 // const waamqp = require('../communication/waamqp.js');
 const wamqtt = require('../communication/wamqtt.js');
-const cfgRecHelper = require('../common/cfgRecHelper.js');
+const cfgRecHelper = require('../utils/cfgRecHelper.js');
 
 const defaultHbtFreq = 5;
 
@@ -15,7 +15,7 @@ function _init (mongoConf, mqttConf) {
     mongodb.connect(mongoConf);
   }
   if (wamqtt) {
-    if (wamqtt && wamqtt.connected === false && wamqtt.reconnecting === false) {
+    if (wamqtt && wamqtt.isConnected() === false && wamqtt.isConnecting() === false) {
       wamqtt.connect(mqttConf);
       wamqtt.events.on('connect', () => {
         console.log('[wamqtt] Connect success !');

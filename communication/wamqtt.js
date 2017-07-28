@@ -2,14 +2,13 @@
 
 const mqtt = require('mqtt');
 const EventEmitter = require('events');
-const watopic = require('../common/watopics.js');
 
 let connStatus = {
   None: 0,
   Connected: 1,
   Closed: 2,
   Offline: 3,
-  ReConnecting: 4
+  Connecting: 4
 };
 
 const publishOptions = {
@@ -37,16 +36,17 @@ let client = null;
 let events = new EventEmitter();
 let connectStatus = connStatus.None;
 
-function _connected () {
-  return (client) ? client.connected : false;
+function _isConnected () {
+  return (connectStatus === connStatus.Connected);
 }
 
-function _reconnecting () {
-  return (client) ? client.reconnecting : false;
+function _isConnecting () {
+  return (connectStatus === connStatus.Connecting);
 }
 
 function _connect (conf, callback) {
   try {
+    connectStatus = connStatus.Connecting;
     let clientId = 'app_' + Math.random().toString(16).substr(2, 8);
     var tcpOptions = {
       port: conf.port || 1883,
@@ -183,8 +183,8 @@ function _unsubscribe (topic, callback) {
 }
 
 module.exports = {
-  connected: _connected,
-  reconnecting: _reconnecting,
+  isConnected: _isConnected,
+  isConnecting: _isConnecting,
   connectStatus: connectStatus,
   events: events,
   connect: _connect,
