@@ -5,8 +5,10 @@ const merge = require('merge');
 const wamqtt = require('../communication/wamqtt.js');
 const watopics = require('../common/watopics.js');
 const ConfigRecord = require('../models/config-record.js');
+const constant = require('../common/const.js');
 
 const mqttTopics = watopics.mqttTopics;
+const tenantId = constant.tenantId;
 
 const cfgRecordBeforeKey = ['scadaDesc', 'deviceIP', 'devicePort', 'deviceDesc', 'tagDesc', 'dataLog', 'engUnit',
   'intDspFmt', 'fraDspFmt', 'spanHigh', 'spanLow', 'state0', 'state1', 'state2', 'state3', 'state4', 'state5', 'state6',
@@ -96,7 +98,6 @@ function replacer (key, value) {
 
 function _syncDeviceConfig (ids, callback) {
   try {
-    let tenantId = 'general';
     let results = [];
     // subscribe cfgack topic for receiving ack from scada
     let subTopic = util.format(mqttTopics.cfgackTopic, tenantId, '+');
@@ -107,7 +108,7 @@ function _syncDeviceConfig (ids, callback) {
         return console.error('format is wrong ! ' + message.content.toString());
       }
       let d = ack.d;
-      if (d.hasOwnProperty('Cfg') && d.Cfg === 0) {
+      if (d.hasOwnProperty('Cfg') && d.Cfg === 1) {
         let result = results.find(o => o.id === message.scadaId);
         if (result) {
           result.ok = true;
