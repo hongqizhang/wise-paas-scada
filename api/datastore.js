@@ -4,8 +4,10 @@ const util = require('util');
 const Promise = require('bluebird');
 
 const mongodb = require('../db/mongodb.js');
+const wamqtt = require('../communication/wamqtt.js');
 const RealData = require('../models/real-data.js');
 const HistData = require('../models/hist-data.js');
+const scadaCmdHelper = require('../utils/scadaCmdHelper.js');
 
 const DefaultMaxHistDataCount = 10000;
 
@@ -84,9 +86,29 @@ function __updateRealData (param, options, callback) {
   }
 }
 
-function _init (conf) {
+function _init (mongoConf, mqttConf) {
   if (mongodb && mongodb.isConnected() === false && mongodb.isConnecting() === false) {
-    mongodb.connect(conf);
+    mongodb.connect(mongoConf);
+  }
+  if (wamqtt) {
+    if (wamqtt && wamqtt.isConnected() === false && wamqtt.isConnecting() === false) {
+      wamqtt.connect(mqttConf);
+      wamqtt.events.on('connect', () => {
+        console.log('[wamqtt] Connect success !');
+      });
+      wamqtt.events.on('close', () => {
+        console.log('[wamqtt] connection close...');
+      });
+      wamqtt.events.on('offline', () => {
+        console.log('[wamqtt] Connect offline !');
+      });
+      wamqtt.events.on('error', (error) => {
+        console.error('[wamqtt] something is wrong ! ' + error);
+      });
+      wamqtt.events.on('reconnect', () => {
+        console.log('[wamqtt] try to reconnect...');
+      });
+    }
   }
 }
 
@@ -216,13 +238,24 @@ function _insertHistData (param, callback) {
   });
 }
 
+function _writeTagValue (param, callback) {
+  let type = typeof param.value;
+  if (param.value === null || type === 'undefined') {
+    let err = 'value can not be null !';
+    return callback(err);
+  }
+
+  scadaCmdHelper.writeTagValue(param, callback);
+}
+
 module.exports = {
   init: _init,
   quit: _quit,
   getRealData: _getRealData,
   upsertRealData: _upsertRealData,
   updateRealData: _updateRealData,
-  deleteRealData: _deleteRealData,
+  // deleteRealData: _deleteRealData,
   getHistData: _getHistData,
-  insertHistData: _insertHistData
+  insertHistData: _insertHistData,
+  writeTagValue: _writeTagValue
 };
