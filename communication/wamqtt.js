@@ -44,7 +44,7 @@ function _isConnecting () {
   return (connectStatus === connStatus.Connecting);
 }
 
-function _connect (conf, callback) {
+function _connect (conf) {
   try {
     connectStatus = connStatus.Connecting;
     let clientId = 'app_' + Math.random().toString(16).substr(2, 8);
@@ -136,18 +136,17 @@ function _connect (conf, callback) {
 }
 
 function _close () {
-  if (client) {
-    client.end(true);
-    client = null;
+  try {
+    if (client) {
+      client.end(true);
+      client = null;
+    }
+  } catch (ex) {
   }
 }
 
 function _publish (topic, message, callback) {
   try {
-    if (!client) {
-      let err = '[MQTT] client is null !';
-      return callback(err);
-    }
     let msg = null;
     if (typeof message === 'string') {
       msg = message;
@@ -162,24 +161,24 @@ function _publish (topic, message, callback) {
     }
     client.publish(topic, msg, publishOptions, callback);
   } catch (ex) {
-    callback(ex);
+    callback(ex.messgae);
   }
 }
 
 function _subscribe (topic, callback) {
-  if (!client) {
-    let err = '[MQTT] client is null !';
-    return callback(err);
+  try {
+    client.subscribe(topic, subscribeOptions, callback);
+  } catch (ex) {
+    callback(ex.message);
   }
-  client.subscribe(topic, subscribeOptions, callback);
 }
 
 function _unsubscribe (topic, callback) {
-  if (!client) {
-    let err = '[MQTT] client is null !';
-    return callback(err);
+  try {
+    client.unsubscribe(topic, callback);
+  } catch (ex) {
+    callback(ex.message);
   }
-  client.unsubscribe(topic, callback);
 }
 
 module.exports = {
