@@ -180,7 +180,7 @@ function _addModifiedConfigRecord (id, record, callback) {
       return callback(err);
     }
 
-    cfgRecHelper.addConfigRecord(id, record, (err, result) => {
+    cfgRecHelper.addModifiedConfigRecord(id, record, (err, result) => {
       if (err) {
         return callback(err);
       }
@@ -202,7 +202,23 @@ function _syncDeviceConfig (ids, callback) {
     let err = 'input needs at least one id !';
     return callback(err);
   }
-  return cfgRecHelper.syncDeviceConfig(ids, callback);
+  cfgRecHelper.syncDeviceConfig(ids, (err, result) => {
+    if (err) {
+      return callback(err);
+    }
+    // set modified status to false
+    let promises = [];
+    for (let i = 0; i < ids.length; i++) {
+      promises.push(_updateModifiedStatus(ids[i]));
+    }
+    Promise.all(promises)
+    .then(function (results) {
+      callback(null, { ok: true });
+    })
+    .catch(function (err) {
+      callback(err);
+    });
+  });
 }
 
 module.exports = {
@@ -212,7 +228,6 @@ module.exports = {
   insertDeviceStatus: _insertDeviceStatus,
   upsertDeviceStatus: _upsertDeviceStatus,
   deleteDeviceStatus: _deleteDeviceStatus,
-  updateModifiedStatus: _updateModifiedStatus,
   addModifiedConfigRecord: _addModifiedConfigRecord,
   syncDeviceConfig: _syncDeviceConfig
 };

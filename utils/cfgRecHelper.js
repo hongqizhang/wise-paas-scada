@@ -26,7 +26,7 @@ function __findOrCreateConfigRecord (id, callback) {
   });
 }
 
-function _addConfigRecord (id, record, callback) {
+function _addModifiedConfigRecord (id, record, callback) {
   // if device status not exists, create one.
   __findOrCreateConfigRecord(id, (err, result) => {
     if (err) {
@@ -43,7 +43,7 @@ function _addConfigRecord (id, record, callback) {
   });
 }
 
-function _mergeModifiedConfigRecord (id, callback) {
+function __mergeModifiedConfigRecord (id, callback) {
   try {
     ConfigRecord.findById(id, { records: true }, (err, result) => {
       if (err) {
@@ -64,7 +64,17 @@ function _mergeModifiedConfigRecord (id, callback) {
   }
 }
 
-function __waitSyncAck (results, retryCount, callback) {
+function __deleteAllModifiedConfigRecord (ids, callback) {
+  try {
+    ConfigRecord.remove({ _id: { $in: ids } }, (err, result) => {
+      return callback(err, result);
+    });
+  } catch (err) {
+    callback(err);
+  }
+}
+
+function __waitAllSyncAck (results, retryCount, callback) {
   setTimeout(() => {
     // console.log('wait...');
     let ok = true;
@@ -83,7 +93,7 @@ function __waitSyncAck (results, retryCount, callback) {
         let err = util.format('SCADA %s no response.', noRespList.join(','));
         return callback(err);
       } else {
-        __waitSyncAck(results, retryCount - 1, callback);
+        __waitAllSyncAck(results, retryCount - 1, callback);
       }
     }
   }, 1000);
@@ -120,7 +130,7 @@ function _syncDeviceConfig (ids, callback) {
       let result = { id: ids[i], ok: false };
       results.push(result);
 
-      _mergeModifiedConfigRecord(ids[i], (err, result) => {
+      __mergeModifiedConfigRecord(ids[i], (err, result) => {
         if (err) {
           return console.error(err);
         }
@@ -141,8 +151,17 @@ function _syncDeviceConfig (ids, callback) {
     }
 
     let retryCount = 10;
-    __waitSyncAck(results, retryCount, (err, result) => {
+    __waitAllSyncAck(results, retryCount, (err, result) => {
+      // unsubscribe topic cfgack
       wamqtt.unsubscribe(subTopic);
+      if (!err) {
+        // delete all records
+        __deleteAllModifiedConfigRecord(ids, (err, result) => {
+          if (err) {
+            return callback(err);
+          }
+        });
+      }
       callback(err, result);
     });
   } catch (err) {
@@ -151,6 +170,6 @@ function _syncDeviceConfig (ids, callback) {
 }
 
 module.exports = {
-  addConfigRecord: _addConfigRecord,
+  addModifiedConfigRecord: _addModifiedConfigRecord,
   syncDeviceConfig: _syncDeviceConfig
 };
