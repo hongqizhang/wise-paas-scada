@@ -16,6 +16,11 @@ const cfgRecordBeforeKey = ['scadaDesc', 'deviceIP', 'devicePort', 'deviceDesc',
 const cfgRecordAfterKey = ['Desc', 'IP', 'Port', 'Desc', 'Desc', 'Log', 'EU', 'IDF', 'FDF', 'SH', 'SL', 'S0', 'S1', 'S2',
   'S3', 'S4', 'S5', 'S6', 'S7'];
 
+const errorMessage = {
+  updateFailed: 'SCADA [%s] update configuration error ! Please contact the administrator of SCADA.',
+  noRecvAck: 'SCADA [%s] has no response. Please contact the administrator of SCADA.'
+};
+
 function __findOrCreateConfigRecord (id, callback) {
   ConfigRecord.findOne({ _id: id }, (err, result) => {
     return result
@@ -81,19 +86,15 @@ function __waitAllSyncAck (results, retryCount, callback) {
   setTimeout(() => {
     // console.log('wait...');
     let ok = true;
-    let noRespList = [];
     for (let i = 0; i < results.length; i++) {
       if (results[i].ok === false) {
         ok = false;
-        noRespList.push(results[i].id);
       }
     }
     if (ok === true) {
-      // let response = { ok: true };
       return callback(null, results);
     } else {
       if (retryCount === 0) {
-        // let err = util.format('SCADA %s no response.', noRespList.join(','));
         return callback(null, results);
       } else {
         __waitAllSyncAck(results, retryCount - 1, callback);
@@ -121,16 +122,22 @@ function _syncDeviceConfig (ids, callback) {
         return console.error('format is wrong ! ' + message.content.toString());
       }
       let d = ack.d;
-      if (d.hasOwnProperty('Cfg') && d.Cfg === 1) {
+      if (d.hasOwnProperty('Cfg') === true) {
         let result = results.find(o => o.id === message.scadaId);
-        if (result) {
+        if (!result) {
+          return;
+        }
+        if (d.Cfg === 1) {
           result.ok = true;
+          result.message = '';
+        } else {
+          result.message = util.format(errorMessage.updateFailed, result.id);
         }
       }
     });
     for (let i = 0; i < ids.length; i++) {
       let scadaId = ids[i];
-      let result = { id: ids[i], ok: false };
+      let result = { id: ids[i], ok: false, message: util.format(errorMessage.noRecvAck, ids[i]) };
       results.push(result);
 
       __mergeModifiedConfigRecord(ids[i], (err, result) => {
