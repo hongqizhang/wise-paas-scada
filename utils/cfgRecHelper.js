@@ -66,6 +66,9 @@ function __mergeModifiedConfigRecord (id, callback) {
 
 function __deleteAllModifiedConfigRecord (ids, callback) {
   try {
+    if (ids.length === 0) {
+      return callback();
+    }
     ConfigRecord.remove({ _id: { $in: ids } }, (err, result) => {
       return callback(err, result);
     });
@@ -86,12 +89,12 @@ function __waitAllSyncAck (results, retryCount, callback) {
       }
     }
     if (ok === true) {
-      let response = { ok: true };
-      return callback(null, response);
+      // let response = { ok: true };
+      return callback(null, results);
     } else {
       if (retryCount === 0) {
-        let err = util.format('SCADA %s no response.', noRespList.join(','));
-        return callback(err);
+        // let err = util.format('SCADA %s no response.', noRespList.join(','));
+        return callback(null, results);
       } else {
         __waitAllSyncAck(results, retryCount - 1, callback);
       }
@@ -149,20 +152,27 @@ function _syncDeviceConfig (ids, callback) {
         });
       });
     }
-
     let retryCount = 10;
-    __waitAllSyncAck(results, retryCount, (err, result) => {
+    __waitAllSyncAck(results, retryCount, (err) => {
       // unsubscribe topic cfgack
       wamqtt.unsubscribe(subTopic);
-      if (!err) {
-        // delete all records
-        __deleteAllModifiedConfigRecord(ids, (err, result) => {
-          if (err) {
-            return callback(err);
-          }
-        });
+      if (err) {
+        return callback(err);
       }
-      callback(err, result);
+
+      let delIds = [];
+      for (let i = 0; i < results.length; i++) {
+        if (results[i].ok === true) {
+          delIds.push(results[i].id);
+        }
+      }
+        // delete all records
+      __deleteAllModifiedConfigRecord(delIds, (err, result) => {
+        if (err) {
+          return callback(err);
+        }
+      });
+      callback(err, results);
     });
   } catch (err) {
     callback(err);

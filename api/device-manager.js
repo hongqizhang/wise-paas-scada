@@ -202,18 +202,20 @@ function _syncDeviceConfig (ids, callback) {
     let err = 'input needs at least one id !';
     return callback(err);
   }
-  cfgRecHelper.syncDeviceConfig(ids, (err, result) => {
+  cfgRecHelper.syncDeviceConfig(ids, (err, results) => {
     if (err) {
       return callback(err);
     }
     // set modified status to false
     let promises = [];
     for (let i = 0; i < ids.length; i++) {
-      promises.push(_updateModifiedStatus(ids[i]));
+      if (results[i] === true) {
+        promises.push(_updateModifiedStatus(ids[i]));
+      }
     }
     Promise.all(promises)
-    .then(function (results) {
-      callback(null, { ok: true });
+    .then(function () {
+      callback(null, results);
     })
     .catch(function (err) {
       callback(err);
