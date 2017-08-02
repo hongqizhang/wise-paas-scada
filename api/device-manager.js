@@ -209,8 +209,8 @@ function _syncDeviceConfig (ids, callback) {
     // set modified status to false
     let promises = [];
     for (let i = 0; i < ids.length; i++) {
-      if (results[i].ok === false) {
-        promises.push(_updateModifiedStatus(ids[i], true));
+      if (results[i].ok === true) {
+        promises.push(_updateModifiedStatus(ids[i], false));
       }
     }
     Promise.all(promises)
