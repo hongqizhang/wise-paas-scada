@@ -22,30 +22,38 @@ const waamqp = wisePaasScada.waamqp;
 <a name="datastore"></a>
 ## datastore
 
-* <a href="#init"><code>datastore.<b>init(options)</b></code></a>
+* <a href="#init"><code>datastore.<b>init(mongodbOptions, mqttOptions)</b></code></a>
 * <a href="#quit"><code>datastore.<b>quit()</b></code></a>
 * <a href="#getRealData"><code>datastore.<b>getRealData(tag array, [callback])</b></code></a>
-* <a href="#upsertRealData"><code>datastore.<b>upsertRealData(parameters, [callback])</b></code></a>
-* <a href="#updateRealData"><code>datastore.<b>updateRealData(parameters, [callback])</b></code></a>
+* <a href="#upsertRealData"><code>datastore.<b>upsertRealData(scadaId, parameters, [callback])</b></code></a>
+* <a href="#updateRealData"><code>datastore.<b>updateRealData(scadaId, parameters, [callback])</b></code></a>
 * <a href="#deleteRealDataByScadaId"><code>datastore.<b>deleteRealDataByScadaId(scadaId, [callback])</b></code></a>
 * <a href="#getHistData"><code>datastore.<b>getHistData()</b></code></a>
 * <a href="#insertHistData"><code>datastore.<b>insertHistData()</b></code></a>
 -------------------------------------------------------
 
 <a name="init"></a>
-### datastore.init(options)
+### datastore.init(mongodbOptions, mqttOptions)
 
-Connects to MongoDB specified by the given options.
+Connects to MongoDB and MQTT broker specified by the given options.
 You have to specify the following options, for example:
 
 ```js
-let conf = {
+let mongodbConf = {
   hostname: '127.0.0.1',
   port: 27017,
   username: 'admin',
   password: '1234',
   database: 'mongodb'
 };
+let mqttConf = {
+  host: '127.0.0.1',
+  port: 1883,
+  username: '',
+  password: ''
+};
+
+datastore.init(mongodbConf, mqttConf);
 ```
 
 -------------------------------------------------------
@@ -60,7 +68,7 @@ When no need to use datacore, close the connection.
 <a name="getRealData"></a>
 ### datastore#getRealData(tag array, [callback])
 
-Get real-time tag data by the given tags list, a tag has `scadaId`, `deviceId`, and `tagName` properties.
+Get real-time tag data by the given tags list, a tag has `scadaId` and `tagName` properties.
 The callback is called when all tag data has been gotten.
 
 For example:
@@ -69,13 +77,11 @@ For example:
 
 let t1 = {
   scadaId: 'scada1',
-  deviceId: 'device1',
   tagName: 'Foo1'
 };
 
 let t2 = {
   scadaId: 'scada2',
-  deviceId: 'device2',
   tagName: 'Foo2'
 };
 
@@ -92,7 +98,7 @@ datastore.getRealData([t1, t2], function (err, response) {
 -------------------------------------------------------
 
 <a name="upsertRealData"></a>
-### datastore#upsertRealData(parameters, [callback])
+### datastore#upsertRealData(scadaId, parameters, [callback])
 
 Update real-time tag value. If tag is not found, tag will be inserted.
 The callback is called when tag value has been updated.
@@ -101,15 +107,14 @@ For example:
 
 ```js
 
+let scadaId = 'scada1';
 let t1 = {
-  scadaId: 'scada1',
-  deviceId: 'device1',
   tagName: 'Foo1',
   value: 100,
   ts: new Date()
 };
 
-datastore.upsertRealData(t1, function (err, response) {
+datastore.upsertRealData(scadaId, t1, function (err, response) {
   if (err) {
     console.error(err);
   } else {
@@ -122,7 +127,7 @@ datastore.upsertRealData(t1, function (err, response) {
 -------------------------------------------------------
 
 <a name="updateRealData"></a>
-### datastore#updateRealData(parameters, [callback])
+### datastore#updateRealData(scadaId, parameters, [callback])
 
 Update real-time tag value.
 The callback is called when tag value has been updated.
@@ -131,15 +136,14 @@ For example:
 
 ```js
 
+let scadaId = 'scada1';
 let t1 = {
-  scadaId: 'scada1',
-  deviceId: 'device1',
   tagName: 'Foo1',
   value: 100,
   ts: new Date()
 };
 
-datastore.upsertRealData(t1, function (err, response) {
+datastore.updateRealData(scadaId, t1, function (err, response) {
   if (err) {
     console.error(err);
   } else {
@@ -223,7 +227,7 @@ let t1 = {
   ts: new Date()
 };
 
-datastore.upsertRealData(t1, function (err, response) {
+datastore.insertHistData(t1, function (err, response) {
   if (err) {
     console.error(err);
   } else {

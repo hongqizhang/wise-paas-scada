@@ -11,19 +11,23 @@ const scadaCmdHelper = require('../utils/scadaCmdHelper.js');
 
 const DefaultMaxHistDataCount = 10000;
 
-function __getRealData (scadaId, deviceId, tagName) {
+function __getRealData (scadaId, tagName) {
+  let find = {};
+  find[tagName] = tagName;
   return new Promise((resolve, reject) => {
-    let id = util.format('%s/%s/%s', scadaId, deviceId, tagName);
-    RealData.findOne({ _id: id }, function (err, result) {
+    RealData.findOne({ _id: scadaId }, (err, result) => {
       if (err) {
         reject(err);
       } else {
+        let tag = {};
+        if (result && result.tags && result.tags[tagName]) {
+          tag = result.tags[tagName];
+        }
         let data = {
           scadaId: scadaId,
-          deviceId: deviceId,
           tagName: tagName,
-          value: (result && typeof result.value !== 'undefined') ? result.value : '*',
-          ts: (result && result.ts) ? result.ts : ''
+          value: tag.value || '*',
+          ts: tag.ts || ''
         };
         resolve(data);
       }
@@ -31,19 +35,79 @@ function __getRealData (scadaId, deviceId, tagName) {
   });
 }
 
-function __updateRealData (param, options, callback) {
+function __updateRealData (scadaId, params, options, callback) {
   try {
-    let type = typeof param.value;
-    if (param.value === null || type === 'undefined') {
-      let err = 'value can not be null !';
+    if (Array.isArray(params) === false) {
+      params = [params];
+    }
+
+    if (!scadaId || typeof scadaId !== 'string') {
+      let err = 'scadaId can not be null !';
+      return callback(err);
+    }
+
+    if (params.length === 0) {
+      let err = 'input can not be null !';
       return callback(err);
     }
 
     let upsert = options.upsert || false;
-    let id = util.format('%s/%s/%s', param.scadaId, param.deviceId, param.tagName);
-    let ts = param.ts || new Date();
+    RealData.findOneAndUpdate({ _id: scadaId }, { $setOnInsert: { tags: {} } }, { upsert: upsert, new: true }, (err, doc) => {
+      if (err) {
+        return callback(err);
+      }
+      if (!doc) {
+        return callback(new Error(util.format('SCADA [%s] does not exist', scadaId)));
+      }
 
-    if (type === 'object') {  // array tag
+      for (let i = 0; i < params.length; i++) {
+        let param = params[i];
+        if (typeof params[i].value === 'object') {   // for array tag
+          let newValue = {};
+          if (doc.tags[param.tagName] && doc.tags[param.tagName].value && typeof doc.tags[param.tagName].value === 'object') {
+            newValue = doc.tags[param.tagName].value;
+          }
+          for (var key in param.value) {
+            newValue[key] = param.value[key];
+          }
+          param.value = newValue;
+        }
+        doc.tags[param.tagName] = { value: param.value, ts: param.ts };
+      }
+      RealData.collection.save(doc);
+      callback();
+    });
+
+    /* var bulk = RealData.collection.initializeOrderedBulkOp();
+    bulk.find({ _id: scadaId }).upsert().updateOne({ $pull: { tags: { name: { $in: tagNamelist } } } });
+    bulk.find({ _id: scadaId }).updateOne({ $push: { tags: { $each: params } } });
+    bulk.execute();
+
+    callback(); */
+
+    /* RealData.update({ _id: scadaId }, {
+      $pull: { tags: { name: { $in: tagNamelist } } }
+    }, { upsert: upsert }, (err, result) => {
+      if (err) {
+        return callback(err);
+      }
+
+      RealData.update({ _id: scadaId }, {
+        $push: { tags: { $each: params } }
+      }, (err, result) => {
+        if (err) {
+          return callback(err);
+        }
+
+        let response = { ok: false };
+        if (result && result.n) {
+          response.ok = (result.n === 1);
+        }
+        callback(null, response);
+      });
+    }); */
+
+    /* if (type === 'object') {  // array tag
       RealData.findOne({ _id: id }, (err, result) => {
         if (err) {
           return callback(err);
@@ -80,7 +144,7 @@ function __updateRealData (param, options, callback) {
         }
         callback(null, response);
       });
-    }
+    } */
   } catch (err) {
     callback(err);
   }
@@ -124,7 +188,7 @@ function _getRealData (obj, callback) {
       let promises = [];
       for (var i = 0; i < obj.length; i++) {
         let param = obj[i];
-        promises.push(__getRealData.call(this, param.scadaId, param.deviceId, param.tagName));
+        promises.push(__getRealData(param.scadaId, param.tagName));
       }
       Promise.all(promises)
       .then(function (results) {
@@ -134,7 +198,7 @@ function _getRealData (obj, callback) {
         callback(err);
       });
     } else {
-      __getRealData.call(this, obj.scadaId, obj.deviceId, obj.tagName)
+      __getRealData(obj.scadaId, obj.tagName)
       .then(function (result) {
         callback(null, result);
       })
@@ -147,12 +211,12 @@ function _getRealData (obj, callback) {
   }
 }
 
-function _upsertRealData (param, callback) {
-  __updateRealData(param, { upsert: true }, callback);
+function _upsertRealData (scadaId, params, callback) {
+  __updateRealData(scadaId, params, { upsert: true }, callback);
 }
 
-function _updateRealData (param, callback) {
-  __updateRealData(param, { upsert: false }, callback);
+function _updateRealData (scadaId, params, callback) {
+  __updateRealData(scadaId, params, { upsert: false }, callback);
 }
 
 function _deleteRealData (scadaId, callback) {
