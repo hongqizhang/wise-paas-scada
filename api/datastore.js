@@ -11,25 +11,21 @@ const scadaCmdHelper = require('../utils/scadaCmdHelper.js');
 
 const DefaultMaxHistDataCount = 10000;
 
-function __getRealData (scadaId, tagName) {
+function __getRealData (param) {
   let find = {};
-  find[tagName] = tagName;
+  find[param.tagName] = param.tagName;
   return new Promise((resolve, reject) => {
-    RealData.findOne({ _id: scadaId }, (err, result) => {
+    RealData.findOne({ _id: param.scadaId }, (err, result) => {
       if (err) {
         reject(err);
       } else {
         let tag = {};
-        if (result && result.tags && result.tags[tagName]) {
-          tag = result.tags[tagName];
+        if (result && result.tags && result.tags[param.tagName]) {
+          tag = result.tags[param.tagName];
         }
-        let data = {
-          scadaId: scadaId,
-          tagName: tagName,
-          value: tag.value || '*',
-          ts: tag.ts || ''
-        };
-        resolve(data);
+        param.value = tag.value || '*';
+        param.ts = tag.ts || '';
+        resolve(param);
       }
     });
   });
@@ -188,7 +184,7 @@ function _getRealData (obj, callback) {
       let promises = [];
       for (var i = 0; i < obj.length; i++) {
         let param = obj[i];
-        promises.push(__getRealData(param.scadaId, param.tagName));
+        promises.push(__getRealData(param));
       }
       Promise.all(promises)
       .then(function (results) {
@@ -198,7 +194,7 @@ function _getRealData (obj, callback) {
         callback(err);
       });
     } else {
-      __getRealData(obj.scadaId, obj.tagName)
+      __getRealData(obj)
       .then(function (result) {
         callback(null, result);
       })

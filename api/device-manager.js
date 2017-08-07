@@ -120,8 +120,14 @@ function _updateModifiedStatus (id, modified, callback) {
   }
 }
 
-function _insertDeviceStatus (params, callback) {
-  DeviceStatus.create(params, function (err, result) {
+/* function _insertDeviceStatus (param, callback) {
+  DeviceStatus.create({
+    _id: param.scadaId,
+    status: param.status || false,
+    modified: param.modified || false,
+    freq: param.hbtFreq || defaultHbtFreq,
+    ts: param.ts || new Date()
+  }, function (err, result) {
     if (err) {
       callback(err);
       return;
@@ -129,7 +135,7 @@ function _insertDeviceStatus (params, callback) {
     let response = { ok: (result !== null) };
     callback(null, response);
   });
-}
+} */
 
 function _upsertDeviceStatus (id, params, callback) {
   DeviceStatus.update({ _id: id }, {
@@ -227,7 +233,7 @@ module.exports = {
   init: _init,
   quit: _quit,
   getDeviceStatus: _getDeviceStatus,
-  insertDeviceStatus: _insertDeviceStatus,
+  // insertDeviceStatus: _insertDeviceStatus,
   upsertDeviceStatus: _upsertDeviceStatus,
   deleteDeviceStatus: _deleteDeviceStatus,
   addModifiedConfigRecord: _addModifiedConfigRecord,
