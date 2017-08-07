@@ -11,8 +11,14 @@ const tenantId = constant.tenantId;
 function _writeTagValue (param, callback) {
   try {
     let topic = util.format(mqttTopics.cmdTopic, tenantId, param.scadaId);
+    let value = param.value;
+    if (param.hasOwnProperty('index') === true) {   // for array tag
+      value = {};
+      value[param.index] = param.value;
+    }
+
     let msg = { d: { Cmd: 'WV', Val: {} }, ts: new Date() };
-    msg.d.Val[param.tagName] = param.value;
+    msg.d.Val[param.tagName] = value;
     wamqtt.publish(topic, msg, (err) => {
       if (err) {
         return callback(err);

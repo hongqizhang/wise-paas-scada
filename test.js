@@ -27,10 +27,10 @@ datastore.init(conf, mqttConf);
 deviceManager.init(conf, mqttConf);
 
 let dsParams1 = {
-  scadaId: 'b5b2490f-1933-44f8-8052-dc486599ccf4',
-  deviceId: 'P01_dev1',
+  scadaId: '5374cfcc-8537-46b7-8c19-6c0d9a636a64',
+  deviceId: 'P01_Device',
   tagName: 'Tag3',
-  value: { 2: 2 },
+  value: 500,
   ts: new Date()
 };
 let dsParams2 = {
@@ -138,14 +138,14 @@ deviceManager.getDeviceStatus(arr, function (err, result) {
   }
 }); */
 
-/* datastore.writeTagValue(dsParams1, function (err, result) {
+datastore.writeTagValue(dsParams1, function (err, result) {
   if (err) {
     console.error(err);
   } else {
     console.log('writeTagValue: ');
     console.log(result);
   }
-}); */
+});
 
 let id = 'cda43195-7a0a-4903-a533-d333d8c5f9d9';
 let dmParams = {
