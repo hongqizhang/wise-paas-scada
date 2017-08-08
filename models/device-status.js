@@ -11,10 +11,6 @@ let deviceStatusSchema = new Schema({
     type: Boolean,
     default: false
   },
-  freq: {
-    type: Number,
-    default: defaultHbtFreq
-  },
   modified: {
     type: Boolean,
     default: false
