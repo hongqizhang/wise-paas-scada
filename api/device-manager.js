@@ -137,6 +137,25 @@ function _updateModifiedStatus (id, modified, callback) {
   });
 } */
 
+function _updateDeviceStatus (id, param, callback) {
+  let set = {};
+  for (let key in param) {
+    set[key] = param[key];
+  }
+  set.ts = param.ts || new Date();
+  DeviceStatus.update({ _id: id }, set, function (err, result) {
+    if (err) {
+      callback(err);
+      return;
+    }
+    let response = { ok: false };
+    if (result && result.n) {
+      response.ok = (result.n > 0);
+    }
+    callback(null, response);
+  });
+}
+
 function _upsertDeviceStatus (id, params, callback) {
   DeviceStatus.update({ _id: id }, {
     _id: id,
@@ -190,7 +209,7 @@ function _addModifiedConfigRecord (id, record, callback) {
       if (err) {
         return callback(err);
       }
-      _upsertDeviceStatus(id, { modified: true }, (err, result) => {
+      _updateDeviceStatus(id, { modified: true }, (err, result) => {
         return callback(err, result);
       });
     });
@@ -234,6 +253,7 @@ module.exports = {
   quit: _quit,
   getDeviceStatus: _getDeviceStatus,
   // insertDeviceStatus: _insertDeviceStatus,
+  updateDeviceStatus: _updateDeviceStatus,
   upsertDeviceStatus: _upsertDeviceStatus,
   deleteDeviceStatus: _deleteDeviceStatus,
   addModifiedConfigRecord: _addModifiedConfigRecord,
