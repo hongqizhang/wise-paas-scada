@@ -68,7 +68,7 @@ function __updateRealData (scadaId, params, options, callback) {
           }
           param.value = newValue;
         }
-        doc.tags[param.tagName] = { value: param.value, ts: param.ts };
+        doc.tags[param.tagName] = { value: param.value, ts: param.ts, opTS: new Date() };
       }
       RealData.collection.save(doc);
       callback();
