@@ -13,7 +13,7 @@ const scadaCmdHelper = require('../utils/scadaCmdHelper.js');
 const DefaultMaxHistDataCount = 10000;
 
 function __getRealData (params, callback) {
-  let scadas = [...new Set(params.map(item => item.scadaId))];
+  let scadas = (params.map(item => item.scadaId));
   let selection = {};
   params.forEach((param) => {
     selection['tags.' + param.tagName] = 1;
@@ -226,9 +226,8 @@ function _deleteRealData (scadaId, callback) {
   });
 }
 
-function _getHistData (param, callback) {
+function _getHistRawData (param, callback) {
   let scadaId = param.scadaId;
-  let deviceId = param.deviceId;
   let tagName = param.tagName;
   let startTs = param.startTs;
   let endTs = param.endTs;
@@ -242,41 +241,26 @@ function _getHistData (param, callback) {
     endTs = new Date(endTs);
   }
 
-  let id = util.format('%s/%s/%s', scadaId, deviceId, tagName);
   HistData
-    .find({ id: id, ts: { '$gte': startTs, '$lt': endTs } })
+    .find({ scadaId: scadaId, tagName: tagName, ts: { '$gte': startTs, '$lt': endTs } })
     .sort({ 'ts': orderby })
     .limit(limit)
     .exec((err, results) => {
       if (err) {
         return callback(err);
       }
-      let outputs = [];
-      results.forEach((result) => {
-        let data = {
-          scadaId: scadaId,
-          deviceId: deviceId,
-          tagName: tagName,
-          value: (result && typeof result.value !== 'undefined') ? result.value : '*',
-          ts: (result && result.ts) ? result.ts : new Date()
-        };
-        outputs.push(data);
-      });
-      callback(null, outputs);
+      callback(null, results);
     });
 }
 
-function _insertHistData (param, callback) {
-  let type = typeof param.value;
-  if (param.value === null || type === 'undefined') {
-    let err = 'value can not be null !';
+function _insertHistData (params, callback) {
+  if (!params || params.length === 0) {
+    let err = 'data can not be null !';
     callback(err);
     return;
   }
 
-  let id = util.format('%s/%s/%s', param.scadaId, param.deviceId, param.tagName);
-  let ts = param.ts || new Date();
-  HistData.create({ _id: new mongodb.ObjectId(), id: id, value: param.value, ts: ts }, (err, result) => {
+  HistData.insertMany(params, (err, result) => {
     if (err) {
       callback(err);
       return;
@@ -306,7 +290,7 @@ module.exports = {
   upsertRealData: _upsertRealData,
   updateRealData: _updateRealData,
   // deleteRealData: _deleteRealData,
-  getHistData: _getHistData,
+  getHistRawData: _getHistRawData,
   insertHistData: _insertHistData,
   writeTagValue: _writeTagValue
 };

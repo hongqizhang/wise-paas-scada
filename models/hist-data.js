@@ -7,7 +7,8 @@ let histDataSchema = new Schema({
   _id: {
     type: Schema.Types.ObjectId
   },
-  id: String,
+  scadaId: String,
+  tagName: String,
   value: Object,
   ts: {
     type: Date,
@@ -15,7 +16,7 @@ let histDataSchema = new Schema({
   }
 }, { collection: 'SCADAHistData', versionKey: false });
 
-histDataSchema.index({ id: 1, ts: 1 }, { unique: true });
+histDataSchema.index({ scadaId: 1, tagName: 1, ts: 1 }, { unique: true });
 
 mongoose.model('HistData', histDataSchema);
 

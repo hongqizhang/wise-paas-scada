@@ -10,8 +10,7 @@ const cfgRecHelper = require('../utils/cfgRecHelper.js');
 
 const defaultHbtFreq = 5;
 
-function __getDeviceStatus (params, callback) {
-  let ids = [...new Set(params)];
+function __getDeviceStatus (ids, callback) {
   DeviceStatus.find({ _id: { $in: ids } }, function (err, results) {
     if (err) {
       callback(err);
