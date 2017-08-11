@@ -3,6 +3,7 @@
 const util = require('util');
 const Promise = require('bluebird');
 
+const constant = require('../common/const.js');
 const mongodb = require('../db/mongodb.js');
 const wamqtt = require('../communication/wamqtt.js');
 const RealData = require('../models/real-data.js');
@@ -11,23 +12,28 @@ const scadaCmdHelper = require('../utils/scadaCmdHelper.js');
 
 const DefaultMaxHistDataCount = 10000;
 
-function __getRealData (param) {
-  let find = {};
-  find[param.tagName] = param.tagName;
-  return new Promise((resolve, reject) => {
-    RealData.findOne({ _id: param.scadaId }, (err, result) => {
-      if (err) {
-        reject(err);
-      } else {
+function __getRealData (params, callback) {
+  let scadas = [...new Set(params.map(item => item.scadaId))];
+  let selection = {};
+  params.forEach((param) => {
+    selection['tags.' + param.tagName] = 1;
+  });
+  RealData.find({ _id: { $in: scadas } }, selection, (err, results) => {
+    if (err) {
+      callback(err);
+    } else {
+      params.forEach((param) => {
         let tag = {};
-        if (result && result.tags && result.tags[param.tagName]) {
-          tag = result.tags[param.tagName];
+        let doc = results.find(o => o._id === param.scadaId);
+        if (doc && doc.tags && doc.tags[param.tagName]) {
+          tag = doc.tags[param.tagName];
         }
-        param.value = tag.value || '*';
+        param.value = tag.value || constant.badTagValue;
         param.ts = tag.ts || '';
-        resolve(param);
-      }
-    });
+      });
+
+      callback(null, params);
+    }
   });
 }
 
@@ -180,28 +186,13 @@ function _quit () {
 
 function _getRealData (obj, callback) {
   try {
+    let params = [];
     if (Array.isArray(obj)) {
-      let promises = [];
-      for (var i = 0; i < obj.length; i++) {
-        let param = obj[i];
-        promises.push(__getRealData(param));
-      }
-      Promise.all(promises)
-      .then(function (results) {
-        callback(null, results);
-      })
-      .catch(function (err) {
-        callback(err);
-      });
+      params = obj;
     } else {
-      __getRealData(obj)
-      .then(function (result) {
-        callback(null, result);
-      })
-      .catch(function (err) {
-        callback(err);
-      });
+      params.push(obj);
     }
+    __getRealData(params, callback);
   } catch (err) {
     callback(err);
   }
@@ -222,7 +213,7 @@ function _deleteRealData (scadaId, callback) {
     return;
   }
   let regex = new RegExp('^' + scadaId, 'i');
-  RealData.remove({ _id: { $regex: regex } }, function (err, result) {
+  RealData.remove({ _id: { $regex: regex } }, (err, result) => {
     if (err) {
       callback(err);
       return;
@@ -256,7 +247,7 @@ function _getHistData (param, callback) {
     .find({ id: id, ts: { '$gte': startTs, '$lt': endTs } })
     .sort({ 'ts': orderby })
     .limit(limit)
-    .exec(function (err, results) {
+    .exec((err, results) => {
       if (err) {
         return callback(err);
       }
@@ -285,7 +276,7 @@ function _insertHistData (param, callback) {
 
   let id = util.format('%s/%s/%s', param.scadaId, param.deviceId, param.tagName);
   let ts = param.ts || new Date();
-  HistData.create({ _id: new mongodb.ObjectId(), id: id, value: param.value, ts: ts }, function (err, result) {
+  HistData.create({ _id: new mongodb.ObjectId(), id: id, value: param.value, ts: ts }, (err, result) => {
     if (err) {
       callback(err);
       return;
