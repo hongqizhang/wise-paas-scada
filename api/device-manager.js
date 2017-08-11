@@ -10,6 +10,28 @@ const cfgRecHelper = require('../utils/cfgRecHelper.js');
 
 const defaultHbtFreq = 5;
 
+function __getDeviceStatus (params, callback) {
+  let ids = [...new Set(params)];
+  DeviceStatus.find({ _id: { $in: ids } }, function (err, results) {
+    if (err) {
+      callback(err);
+    } else {
+      let response = [];
+      for (let i = 0; i < results.length; i++) {
+        let result = results[i];
+        let device = {
+          id: result._id,
+          status: (result && typeof result.status !== 'undefined') ? result.status : false,
+          modified: (result && typeof result.modified !== 'undefined') ? result.modified : false,
+          ts: (result) ? result.ts : new Date()
+        };
+        response.push(device);
+      }
+      callback(null, response);
+    }
+  });
+}
+
 function _init (mongoConf, mqttConf) {
   if (mongodb && mongodb.isConnected() === false && mongodb.isConnecting() === false) {
     mongodb.connect(mongoConf);
@@ -45,47 +67,15 @@ function _quit () {
   }
 }
 
-function _getSingleDeviceStatus (id) {
-  return new Promise((resolve, reject) => {
-    DeviceStatus.findOne({ _id: id }, function (err, result) {
-      if (err) {
-        reject(err);
-      } else {
-        let response = {
-          id: id,
-          status: (result && typeof result.status !== 'undefined') ? result.status : false,
-          modified: (result && typeof result.modified !== 'undefined') ? result.modified : false,
-          ts: (result) ? result.ts : new Date()
-        };
-        resolve(response);
-      }
-    });
-  });
-}
-
 function _getDeviceStatus (ids, callback) {
   try {
+    let params = [];
     if (Array.isArray(ids)) {
-      let promises = [];
-      for (var i = 0; i < ids.length; i++) {
-        promises.push(_getSingleDeviceStatus.call(this, ids[i]));
-      }
-      Promise.all(promises)
-      .then(function (results) {
-        callback(null, results);
-      })
-      .catch(function (err) {
-        callback(err);
-      });
+      params = ids;
     } else {
-      _getSingleDeviceStatus.call(this, ids)
-      .then(function (result) {
-        callback(null, result);
-      })
-      .catch(function (err) {
-        callback(err);
-      });
+      params.push(ids);
     }
+    __getDeviceStatus(params, callback);
   } catch (err) {
     callback(err);
   }
@@ -127,7 +117,7 @@ function _updateModifiedStatus (id, modified, callback) {
     modified: param.modified || false,
     freq: param.hbtFreq || defaultHbtFreq,
     ts: param.ts || new Date()
-  }, function (err, result) {
+  }, (err, result) => {
     if (err) {
       callback(err);
       return;
@@ -143,7 +133,7 @@ function _updateDeviceStatus (id, param, callback) {
     set[key] = param[key];
   }
   set.ts = param.ts || new Date();
-  DeviceStatus.update({ _id: id }, set, function (err, result) {
+  DeviceStatus.update({ _id: id }, set, (err, result) => {
     if (err) {
       callback(err);
       return;
@@ -163,7 +153,7 @@ function _upsertDeviceStatus (id, params, callback) {
     freq: params.freq || defaultHbtFreq,
     modified: params.modified || false,
     ts: params.ts || new Date()
-  }, { upsert: true }, function (err, result) {
+  }, { upsert: true }, (err, result) => {
     if (err) {
       callback(err);
       return;
@@ -181,7 +171,7 @@ function _deleteDeviceStatus (id, callback) {
     let err = 'id can not be null !';
     return callback(err);
   }
-  DeviceStatus.remove({ _id: id }, function (err, result) {
+  DeviceStatus.remove({ _id: id }, (err, result) => {
     if (err) {
       callback(err);
       return;
@@ -239,10 +229,10 @@ function _syncDeviceConfig (ids, callback) {
       }
     }
     Promise.all(promises)
-    .then(function () {
+    .then(() => {
       callback(null, results);
     })
-    .catch(function (err) {
+    .catch((err) => {
       callback(err);
     });
   });

@@ -1,5 +1,6 @@
 'use strict';
 
 module.exports = {
-  tenantId: 'general'
+  tenantId: 'general',
+  badTagValue: '*'
 };
