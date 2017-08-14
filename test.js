@@ -27,9 +27,9 @@ datastore.init(conf, mqttConf);
 deviceManager.init(conf, mqttConf);
 
 let dsParams1 = {
-  scadaId: '5374cfcc-8537-46b7-8c19-6c0d9a636a64',
+  scadaId: 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce',
   deviceId: 'P01_Device',
-  tagName: 'Tag3',
+  tagName: 'TestAO5001',
   value: 500,
   ts: new Date()
 };
@@ -41,7 +41,7 @@ let dsParams2 = {
 };
 
 let histParam1 = {
-  scadaId: 'cda43195-7a0a-4903-a533-d333d8c5f9d9',
+  scadaId: 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce',
   deviceId: 'P02_SCADA',
   tagName: 'ATML_PACPRF:CTR',
   value: 100,
@@ -49,26 +49,34 @@ let histParam1 = {
 };
 
 let histQueryParam = {
-  scadaId: 'cda43195-7a0a-4903-a533-d333d8c5f9d9',
-  deviceId: 'P02_SCADA',
-  tagName: 'Tag3',
+  scadaId: 'd417571c-c082-49be-b9fd-310d6f0217d0',
+  tagName: 'Tag1',
   startTs: new Date('2015-01-01'),
   endTs: new Date(),
   orderby: -1,
-  limit: 10
+  limit: 3
 };
 
 function _getValueProc () {
-  datastore.getRealData([dsParams1], function (err, result) {
+  datastore.getRealData([dsParams1, dsParams2], function (err, result) {
     if (err) {
       console.error(err);
     } else {
-      console.log('getRealData: ' + result[0].value);
-      setTimeout(_getValueProc, 100);
+      console.log('getRealData: ' + result);
+      // setTimeout(_getValueProc, 100);
     }
   });
 }
 setTimeout(_getValueProc, 1000);
+
+datastore.getHistRawData(histQueryParam, function (err, result) {
+  if (err) {
+    console.error(err);
+  } else {
+    console.log('getHistData: ');
+    console.log(result);
+  }
+});
 
 /* datastore.insertHistData(histParam1, function (err, result) {
   if (err) {
@@ -99,7 +107,7 @@ for (let i = 0; i < 1000; i++) {
   );
 } */
 
-datastore.upsertRealData(dsParams1.scadaId, dsParams1, function (err, result) {
+/* datastore.upsertRealData(dsParams1.scadaId, dsParams1, function (err, result) {
   if (err) {
     console.error(err);
   } else {
@@ -114,20 +122,33 @@ datastore.upsertRealData(dsParams1.scadaId, dsParams1, function (err, result) {
       }
     });
   }
-});
+}); */
 
-/* arr.length = 0;
-for (let i = 0; i < 10; i++) {
-  arr.push('cda43195-7a0a-4903-a533-d333d8c5f9d9');
-}
-deviceManager.getDeviceStatus(arr, function (err, result) {
+/* deviceManager.updateDeviceStatus(dsParams1.scadaId, { modified: true }, function (err, result) {
+  if (err) {
+    console.error(err);
+  } else {
+    console.log('updateRealData: ');
+    console.log(result);
+    deviceManager.getDeviceStatus(dsParams1.scadaId, function (err, result) {
+      if (err) {
+        console.error(err);
+      } else {
+        console.log('getDeviceStatus: ');
+        console.log(result);
+      }
+    });
+  }
+}); */
+
+deviceManager.getDeviceStatus('cda43195-7a0a-4903-a533-d333d8c5f9d9', function (err, result) {
   if (err) {
     console.error(err);
   } else {
     console.log('getDeviceStatus: ');
     console.log(result);
   }
-}); */
+});
 
 /* datastore.deleteRealDataByScadaId(dsParams1.scadaId, function (err, result) {
   if (err) {
@@ -138,7 +159,7 @@ deviceManager.getDeviceStatus(arr, function (err, result) {
   }
 }); */
 
-datastore.writeTagValue(dsParams1, function (err, result) {
+/* datastore.writeTagValue(dsParams1, function (err, result) {
   if (err) {
     console.error(err);
   } else {
@@ -160,5 +181,5 @@ deviceManager.getDeviceStatus(id, function (err, result) {
     console.log(result);
   }
 });
-
+*/
 // datastore.quit();

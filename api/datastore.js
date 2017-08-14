@@ -253,14 +253,25 @@ function _getHistRawData (param, callback) {
     });
 }
 
-function _insertHistData (params, callback) {
+function _insertHistData (scadaId, params, ts, callback) {
   if (!params || params.length === 0) {
     let err = 'data can not be null !';
     callback(err);
     return;
   }
 
-  HistData.insertMany(params, (err, result) => {
+  let tags = {};
+  for (let i = 0; i < params.length; i++) {
+    let param = params[i];
+    tags[param.tagName] = param.value;
+  }
+  HistData.create({ _id: new mongodb.ObjectId(), id: scadaId, tags: tags, ts: ts }, (err) => {
+    if (err) {
+      return callback(err);
+    }
+    callback();
+  });
+  /* HistData.insertMany(params, (err, result) => {
     if (err) {
       callback(err);
       return;
@@ -270,7 +281,7 @@ function _insertHistData (params, callback) {
       response.ok = true;
     }
     callback(null, response);
-  });
+  }); */
 }
 
 function _writeTagValue (param, callback) {
