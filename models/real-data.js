@@ -20,8 +20,6 @@ let realDataSchema = new Schema({
   tags: Object
 }, { collection: 'SCADARealData', versionKey: false });
 
-realDataSchema.index({ '_id': 1, 'tags.name': 1 }, { unique: true });
-
 mongoose.model('RealData', realDataSchema);
 
 module.exports = mongoose.model('RealData');
