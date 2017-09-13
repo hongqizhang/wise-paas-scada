@@ -1,7 +1,6 @@
 'use strict';
 
 const util = require('util');
-const Promise = require('bluebird');
 
 const constant = require('../common/const.js');
 const mongodb = require('../db/mongodb.js');
@@ -44,13 +43,11 @@ function __updateRealData (scadaId, params, options, callback) {
     }
 
     if (!scadaId || typeof scadaId !== 'string') {
-      let err = 'scadaId can not be null !';
-      return callback(err);
+      return callback(new Error('scadaId can not be null !'));
     }
 
     if (params.length === 0) {
-      let err = 'input can not be null !';
-      return callback(err);
+      return callback(new Error('input can not be null !'));
     }
 
     let upsert = options.upsert || false;
@@ -208,9 +205,7 @@ function _updateRealData (scadaId, params, callback) {
 
 function _deleteRealData (scadaId, callback) {
   if (!scadaId) {
-    let err = 'scadaId can not be null !';
-    callback(err);
-    return;
+    return callback(new Error('scadaId can not be null !'));
   }
   let regex = new RegExp('^' + scadaId, 'i');
   RealData.remove({ _id: { $regex: regex } }, (err, result) => {
@@ -227,68 +222,86 @@ function _deleteRealData (scadaId, callback) {
 }
 
 function _getHistRawData (param, callback) {
-  let scadaId = param.scadaId;
-  let tagName = param.tagName;
-  let startTs = param.startTs;
-  let endTs = param.endTs;
-  let orderby = param.orderby || 1;   // default is ASC
-  let limit = (param.limit > DefaultMaxHistDataCount) ? DefaultMaxHistDataCount : param.limit;
+  try {
+    let scadaId = param.scadaId;
+    let tagName = param.tagName;
+    let startTs = param.startTs;
+    let endTs = param.endTs;
+    let orderby = param.orderby || 1;   // default is ASC
+    let limit = (param.limit > DefaultMaxHistDataCount) ? DefaultMaxHistDataCount : param.limit;
 
-  if ((startTs instanceof Date) === false) {
-    startTs = new Date(startTs);
-  }
-  if ((endTs instanceof Date) === false) {
-    endTs = new Date(endTs);
-  }
+    let condition = {};
+    condition.scadaId = scadaId;
+    condition.ts = { '$lt': new Date() };
 
-  HistData
-    .find({ scadaId: scadaId, tagName: tagName, ts: { '$gte': startTs, '$lt': endTs } })
-    .sort({ 'ts': orderby })
-    .limit(limit)
-    .exec((err, results) => {
-      if (err) {
-        return callback(err);
+    if (startTs) {
+      if (startTs instanceof Date === false) {
+        return callback(new Error('The format of start time must be Date !'));
       }
-      callback(null, results);
-    });
+      condition.ts['$gte'] = startTs;
+    }
+
+    if (endTs) {
+      if (endTs instanceof Date === false) {
+        return callback(new Error('The format of end time must be Date !'));
+      }
+      condition.ts['$lt'] = endTs;
+    }
+
+    if (tagName) {
+      condition.tagName = { $in: [] };
+      if (typeof tagName === 'string') {
+        condition.tagName['$in'].push(tagName);
+      } else if (Array.isArray(tagName) === true) {
+        condition.tagName['$in'] = tagName;
+      }
+    }
+
+    HistData
+      .find(condition)
+      .sort({ 'ts': orderby })
+      .limit(limit)
+      .exec((err, results) => {
+        if (err) {
+          return callback(err);
+        }
+        callback(null, results);
+      });
+    /* HistData
+      .find(condition, { tags: { $elemMatch: { name: { $in: tagName } } } })
+      .sort({ 'ts': orderby })
+      .limit(limit)
+      .exec((err, results) => {
+        if (err) {
+          return callback(err);
+        }
+        callback(null, results);
+      }); */
+  } catch (ex) {
+    callback(ex);
+  }
 }
 
-function _insertHistData (scadaId, params, ts, callback) {
+function _insertHistData (params, callback) {
   if (!params || params.length === 0) {
-    let err = 'data can not be null !';
-    callback(err);
-    return;
+    callback(new Error('data can not be null !'));
   }
-
-  let tags = {};
-  for (let i = 0; i < params.length; i++) {
-    let param = params[i];
-    tags[param.tagName] = param.value;
-  }
-  HistData.create({ _id: new mongodb.ObjectId(), id: scadaId, tags: tags, ts: ts }, (err) => {
-    if (err) {
-      return callback(err);
+  try {
+    var bulk = HistData.collection.initializeUnorderedBulkOp();
+    for (let i = 0; i < params.length; i++) {
+      bulk.insert(params[i]);
     }
+    bulk.execute();
     callback();
-  });
-  /* HistData.insertMany(params, (err, result) => {
-    if (err) {
-      callback(err);
-      return;
-    }
-    let response = { ok: false };
-    if (result) {
-      response.ok = true;
-    }
-    callback(null, response);
-  }); */
+  } catch (ex) {
+    callback(ex);
+  }
 }
 
 function _writeTagValue (param, callback) {
   let type = typeof param.value;
   if (param.value === null || type === 'undefined') {
-    let err = 'value can not be null !';
-    return callback(err);
+    return callback(new Error('value can not be null !'));
   }
 
   scadaCmdHelper.writeTagValue(param, callback);

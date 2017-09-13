@@ -3,7 +3,7 @@
 const mongoose = require('mongoose');
 
 let Schema = mongoose.Schema;
-/* let histDataSchema = new Schema({
+let histDataSchema = new Schema({
   _id: {
     type: Schema.Types.ObjectId
   },
@@ -16,14 +16,19 @@ let Schema = mongoose.Schema;
   }
 }, { collection: 'SCADAHistData', versionKey: false });
 
-histDataSchema.index({ scadaId: 1, tagName: 1, ts: 1 }, { unique: true }); */
+histDataSchema.index({ scadaId: 1, tagName: 1, ts: 1 }, { unique: true });
+
+/* let subSchema = new Schema({
+  name: String,
+  value: Object
+}, { _id: false });
 
 let histDataSchema = new Schema({
   _id: {
     type: Schema.Types.ObjectId
   },
   id: String,
-  tags: Object,
+  tags: [subSchema],
   ts: {
     type: Date,
     default: Date.now
@@ -31,6 +36,7 @@ let histDataSchema = new Schema({
 }, { collection: 'SCADAHistData', versionKey: false });
 
 histDataSchema.index({ id: 1, ts: 1 }, { unique: true });
+histDataSchema.index({ id: 1, ts: 1, 'tags.name': 1 }, { unique: true }); */
 
 mongoose.model('HistData', histDataSchema);
 

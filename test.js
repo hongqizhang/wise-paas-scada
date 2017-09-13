@@ -29,7 +29,7 @@ deviceManager.init(conf, mqttConf);
 let dsParams1 = {
   scadaId: 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce',
   deviceId: 'P01_Device',
-  tagName: 'TestAO5001',
+  tagName: 'TestDO01',
   value: 500,
   ts: new Date()
 };
@@ -49,21 +49,21 @@ let histParam1 = {
 };
 
 let histQueryParam = {
-  scadaId: 'd417571c-c082-49be-b9fd-310d6f0217d0',
-  tagName: 'Tag1',
-  startTs: new Date('2015-01-01'),
-  endTs: new Date(),
+  scadaId: 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce',
+  tagName: ['TestAO1', 'TestAO2'],
+  // startTs: new Date('2015-01-01'),
+  // endTs: new Date(),
   orderby: -1,
-  limit: 3
+  limit: 10
 };
 
 function _getValueProc () {
-  datastore.getRealData([dsParams1, dsParams2], function (err, result) {
+  datastore.getRealData(dsParams1, function (err, result) {
     if (err) {
       console.error(err);
     } else {
-      console.log('getRealData: ' + result);
-      // setTimeout(_getValueProc, 100);
+      console.log('getRealData: ' + result[0].value);
+      // setTimeout(_getValueProc, 1000);
     }
   });
 }
@@ -78,21 +78,27 @@ datastore.getHistRawData(histQueryParam, function (err, result) {
   }
 });
 
-/* datastore.insertHistData(histParam1, function (err, result) {
-  if (err) {
-    console.error(err);
-  } else {
-    console.log('insertHistData: ');
-    datastore.getHistData(histQueryParam, function (err, result) {
-      if (err) {
-        console.error(err);
-      } else {
-        console.log('getHistData: ');
-        console.log(result);
-      }
+/* function _insertHist () {
+  let tags = [];
+  for (let i = 0; i < 5000; i++) {
+    tags.push({
+      scadaId: 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce',
+      deviceId: 'P01_Device',
+      tagName: 'TestAO' + i,
+      value: 500,
+      ts: new Date()
     });
   }
-}); */
+  datastore.insertHistData(tags, function (err, result) {
+    if (err) {
+      console.error(err);
+    } else {
+      console.log('insertHistData: ');
+      setTimeout(_insertHist, 1000);
+    }
+  });
+}
+setTimeout(_insertHist, 1000); */
 
 /* let arr = [];
 for (let i = 0; i < 1000; i++) {
