@@ -19,7 +19,7 @@ let deviceStatusSchema = new Schema({
     type: Date,
     default: Date.now
   }
-}, { collection: 'SCADADeviceStatus', versionKey: false });
+}, { collection: 'scada_DeviceStatus', versionKey: false });
 mongoose.model('DeviceStatus', deviceStatusSchema);
 
 module.exports = mongoose.model('DeviceStatus');

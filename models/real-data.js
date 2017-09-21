@@ -18,7 +18,7 @@ let Schema = mongoose.Schema;
 let realDataSchema = new Schema({
   _id: String,
   tags: Object
-}, { collection: 'SCADARealData', versionKey: false });
+}, { collection: 'scada_RealData', versionKey: false });
 
 mongoose.model('RealData', realDataSchema);
 

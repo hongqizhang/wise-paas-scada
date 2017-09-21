@@ -13,7 +13,7 @@ let configRecordSchema = new Schema({
       default: Date.now
     }
   }]
-}, { collection: 'SCADACfgModifiedRecord', versionKey: false, strict: false });
+}, { collection: 'scada_CfgModifiedRecord', versionKey: false, strict: false });
 
 mongoose.model('ConfigRecord', configRecordSchema);
 

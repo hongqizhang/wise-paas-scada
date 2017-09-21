@@ -14,7 +14,7 @@ let histDataSchema = new Schema({
     type: Date,
     default: Date.now
   }
-}, { collection: 'SCADAHistData', versionKey: false });
+}, { collection: 'scada_HistRawData', versionKey: false });
 
 histDataSchema.index({ scadaId: 1, tagName: 1, ts: 1 }, { unique: true });
 
@@ -38,6 +38,6 @@ let histDataSchema = new Schema({
 histDataSchema.index({ id: 1, ts: 1 }, { unique: true });
 histDataSchema.index({ id: 1, ts: 1, 'tags.name': 1 }, { unique: true }); */
 
-mongoose.model('HistData', histDataSchema);
+mongoose.model('HistRawData', histDataSchema);
 
-module.exports = mongoose.model('HistData');
+module.exports = mongoose.model('HistRawData');

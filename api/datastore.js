@@ -7,7 +7,7 @@ const constant = require('../common/const.js');
 const mongodb = require('../db/mongodb.js');
 const wamqtt = require('../communication/wamqtt.js');
 const RealData = require('../models/real-data.js');
-const HistData = require('../models/hist-data.js');
+const HistRawData = require('../models/hist-rawdata.js');
 const scadaCmdHelper = require('../utils/scadaCmdHelper.js');
 
 function __getRealData (params, callback) {
@@ -187,7 +187,7 @@ function __getHistRawData (param) {
         condition.ts['$lt'] = endTs;
       }
 
-      HistData.aggregate({
+      HistRawData.aggregate({
         $match: condition
       }, {
         $sort: { ts: orderby }
@@ -219,7 +219,7 @@ function __getHistRawData (param) {
         }
       });
 
-      /* HistData
+      /* HistRawData
         .find(condition)
         .sort({ 'ts': orderby })
         .limit(limit)
@@ -400,12 +400,12 @@ function _getDataLog (param, callback) {
   }
 }
 
-function _insertHistData (params, callback) {
+function _insertHistRawData (params, callback) {
   if (!params || params.length === 0) {
     callback(new Error('data can not be null !'));
   }
   try {
-    var bulk = HistData.collection.initializeUnorderedBulkOp();
+    var bulk = HistRawData.collection.initializeUnorderedBulkOp();
     for (let i = 0; i < params.length; i++) {
       bulk.insert(params[i]);
     }
@@ -433,6 +433,6 @@ module.exports = {
   updateRealData: _updateRealData,
   // deleteRealData: _deleteRealData,
   getHistRawData: _getHistRawData,
-  insertHistData: _insertHistData,
+  insertHistRawData: _insertHistRawData,
   writeTagValue: _writeTagValue
 };
