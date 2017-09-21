@@ -6,6 +6,11 @@ const waamqp = require('./communication/waamqp.js');
 const wamqtt = require('./communication/wamqtt.js');
 const waTopics = require('./common/watopics.js');
 
+const constant = require('./common/const');
+
+// constant
+module.exports.const = constant;
+
 module.exports.datastore = datastore;
 module.exports.deviceManager = deviceManager;
 module.exports.waamqp = waamqp;

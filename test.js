@@ -16,11 +16,11 @@ let mqttConf = {
 };
 
 let conf = {
-  hostname: '172.16.12.211',
+  hostname: 'ei-mongodb-replica-stage.eastasia.cloudapp.azure.com',
   port: 27017,
-  username: 'wisepaas',
-  password: 'wisepaas',
-  database: 'WISE-PaaS'
+  username: 'e5a8fe79-e29e-4d71-a244-4bb2c3f3746d',
+  password: 'lMAvjVHrFSlN7rgN9D8kwljaa',
+  database: 'f78eaf9c-d8a5-41ab-b464-90d29f2c2460'
 };
 
 datastore.init(conf, mqttConf);
@@ -49,12 +49,29 @@ let histParam1 = {
 };
 
 let histQueryParam = {
-  scadaId: 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce',
-  tagName: ['TestAO1', 'TestAO2'],
-  // startTs: new Date('2015-01-01'),
-  // endTs: new Date(),
+  tags: [{
+    scadaId: 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce',
+    tagName: 'TestAO01'
+  }, {
+    scadaId: '5374cfcc-8537-46b7-8c19-6c0d9a636a64',
+    tagName: 'TestAO02'
+  }],
+  startTs: new Date('2015-01-01'),
+  endTs: new Date(),
   orderby: -1,
-  limit: 10
+  limit: 2
+};
+
+let histQueryParam1 = {
+  tags: [{
+    scadaId: 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce',
+    tagName: 'TestAO01'
+  }],
+  startTs: new Date('2015-01-01'),
+  interval: 100,
+  intervalType: wisePaasScada.const.intervalType.second,  // second, minute, hour, day
+  dataType: wisePaasScada.const.dataType.last,  // last, min, max, avg
+  limit: 10000
 };
 
 function _getValueProc () {
@@ -69,12 +86,14 @@ function _getValueProc () {
 }
 setTimeout(_getValueProc, 1000);
 
+console.time('getHistRawData');
 datastore.getHistRawData(histQueryParam, function (err, result) {
   if (err) {
     console.error(err);
   } else {
+    console.timeEnd('getHistRawData');
     console.log('getHistData: ');
-    console.log(result);
+    console.log(JSON.stringify(result));
   }
 });
 

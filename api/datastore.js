@@ -1,6 +1,7 @@
 'use strict';
 
 const util = require('util');
+const Promise = require('bluebird');
 
 const constant = require('../common/const.js');
 const mongodb = require('../db/mongodb.js');
@@ -8,8 +9,6 @@ const wamqtt = require('../communication/wamqtt.js');
 const RealData = require('../models/real-data.js');
 const HistData = require('../models/hist-data.js');
 const scadaCmdHelper = require('../utils/scadaCmdHelper.js');
-
-const DefaultMaxHistDataCount = 10000;
 
 function __getRealData (params, callback) {
   let scadas = (params.map(item => item.scadaId));
@@ -61,6 +60,9 @@ function __updateRealData (scadaId, params, options, callback) {
 
       for (let i = 0; i < params.length; i++) {
         let param = params[i];
+        if (typeof param.ts === 'string') {
+          param.ts = new Date(param.ts);
+        }
         if (typeof params[i].value === 'object') {   // for array tag
           let newValue = {};
           if (doc.tags[param.tagName] && doc.tags[param.tagName].value && typeof doc.tags[param.tagName].value === 'object') {
@@ -149,6 +151,91 @@ function __updateRealData (scadaId, params, options, callback) {
   }
 }
 
+function __getHistRawData (param) {
+  return new Promise((resolve, reject) => {
+    try {
+      let condition = {};
+
+      let scadaId = param.scadaId;
+      let tagName = param.tagName;
+      let startTs = param.startTs;
+      let endTs = param.endTs;
+      let orderby = param.orderby || 1;   // default is ASC
+      let limit = param.limit || 0;
+
+      if (param.condition) {
+        for (let key in param.condition) {
+          condition[key] = param.condition[key];
+        }
+      }
+
+      condition.scadaId = scadaId;
+      condition.tagName = tagName;
+      condition.ts = { '$lt': new Date() };
+
+      if (startTs) {
+        if (startTs instanceof Date === false) {
+          return reject(new Error('The format of start time must be Date !'));
+        }
+        condition.ts['$gte'] = startTs;
+      }
+
+      if (endTs) {
+        if (endTs instanceof Date === false) {
+          return reject(new Error('The format of end time must be Date !'));
+        }
+        condition.ts['$lt'] = endTs;
+      }
+
+      HistData.aggregate({
+        $match: condition
+      }, {
+        $sort: { ts: orderby }
+      }, {
+        $limit: limit
+      }, {
+        $group: {
+          _id: { scadaId: '$scadaId', tagName: '$tagName' },
+          values: {
+            $push: { value: '$value', ts: '$ts' }
+          }
+        }
+      }, {
+        $project: { _id: 0 }
+      }, (err, results) => {
+        if (err) {
+          reject(err);
+        } else {
+          let output = {
+            scadaId: scadaId,
+            tagName: tagName,
+            values: []
+          };
+
+          if (results.length > 0) {
+            output.values = results[0].values;
+          }
+          resolve(output);
+        }
+      });
+
+      /* HistData
+        .find(condition)
+        .sort({ 'ts': orderby })
+        .limit(limit)
+        .exec((err, results) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(results);
+          }
+        }); */
+    } catch (ex) {
+      reject(ex);
+    }
+  });
+}
+
 function _init (mongoConf, mqttConf) {
   if (mongodb && mongodb.isConnected() === false && mongodb.isConnecting() === false) {
     mongodb.connect(mongoConf);
@@ -223,60 +310,91 @@ function _deleteRealData (scadaId, callback) {
 
 function _getHistRawData (param, callback) {
   try {
-    let scadaId = param.scadaId;
-    let tagName = param.tagName;
+    let tags = param.tags;
     let startTs = param.startTs;
     let endTs = param.endTs;
     let orderby = param.orderby || 1;   // default is ASC
-    let limit = (param.limit > DefaultMaxHistDataCount) ? DefaultMaxHistDataCount : param.limit;
+    let limit = param.limit || 0;
 
-    let condition = {};
-    condition.scadaId = scadaId;
-    condition.ts = { '$lt': new Date() };
-
-    if (startTs) {
-      if (startTs instanceof Date === false) {
-        return callback(new Error('The format of start time must be Date !'));
-      }
-      condition.ts['$gte'] = startTs;
+    if (!tags || tags.length === 0) {
+      return callback(new Error('The tag can bot be null !'));
     }
 
-    if (endTs) {
-      if (endTs instanceof Date === false) {
-        return callback(new Error('The format of end time must be Date !'));
-      }
-      condition.ts['$lt'] = endTs;
-    }
-
-    if (tagName) {
-      condition.tagName = { $in: [] };
-      if (typeof tagName === 'string') {
-        condition.tagName['$in'].push(tagName);
-      } else if (Array.isArray(tagName) === true) {
-        condition.tagName['$in'] = tagName;
-      }
-    }
-
-    HistData
-      .find(condition)
-      .sort({ 'ts': orderby })
-      .limit(limit)
-      .exec((err, results) => {
-        if (err) {
-          return callback(err);
-        }
-        callback(null, results);
+    Promise.map(tags, (tag) => {
+      return __getHistRawData({
+        scadaId: tag.scadaId,
+        tagName: tag.tagName,
+        startTs: startTs,
+        endTs: endTs,
+        orderby: orderby,
+        limit: limit
       });
-    /* HistData
-      .find(condition, { tags: { $elemMatch: { name: { $in: tagName } } } })
-      .sort({ 'ts': orderby })
-      .limit(limit)
-      .exec((err, results) => {
-        if (err) {
-          return callback(err);
+    }).then((results) => {
+      let total = results.reduce((sum, result) => {
+        if (result && result.values && result.values.length > 0) {
+          return sum + result.values.length;
+        } else {
+          return sum;
         }
-        callback(null, results);
-      }); */
+      }, 0);
+      callback(null, { totalCount: total, dataLog: results });
+    })
+    .catch((err) => {
+      callback(err);
+    });
+  } catch (ex) {
+    callback(ex);
+  }
+}
+
+/**
+ * Fetch the processed history data. There are four data type and four interval type.
+ *  - interval type: : secord, minute, hour, day
+ *  - data type: last, min, max, avg
+ *
+ * @param {param.scadaId} SCADA unique ID.
+ * @param {param.tagName} Tag name of the specified SCADA, it can be single or multiple tag name.
+ * @param {param.startTs} The start time (Date object) of the result-set.
+ * @param {param.endTs} The end time (Date object) of the result-set.
+ * @param {param.orderby} Used to sort the result-set by time in ascending(1) or descending order(-1).
+ * @param {param.limit} Specify the maximum number of the result-set.
+ */
+function _getDataLog (param, callback) {
+  try {
+    let tags = param.tags;
+    let startTs = param.startTs;
+    let endTs = param.endTs;
+    let orderby = param.orderby || 1;   // default is ASC
+    let limit = param.limit || 0;
+    // intervalType = wisePaasScada.const.intervalType.second,  // 'S', 'M', 'H', 'D'
+    // dataType = wisePaasScada.const.dataType.last   // 'LAST', 'MIN', 'MAX', 'AVG'
+
+    if (!tags || tags.length === 0) {
+      return callback(new Error('The tag can bot be null !'));
+    }
+
+    Promise.map(tags, function (tag) {
+      return __getHistRawData({
+        scadaId: tag.scadaId,
+        tagName: tag.tagName,
+        startTs: startTs,
+        endTs: endTs,
+        orderby: orderby,
+        limit: limit
+      });
+    }).then((results) => {
+      let total = results.reduce((sum, result) => {
+        if (result && result.values && result.values.length > 0) {
+          return sum + result.values.length;
+        } else {
+          return sum;
+        }
+      }, 0);
+      callback(null, { totalCount: total, dataLog: results });
+    })
+    .catch((err) => {
+      callback(err);
+    });
   } catch (ex) {
     callback(ex);
   }
