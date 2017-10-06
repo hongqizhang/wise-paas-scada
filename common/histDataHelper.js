@@ -116,11 +116,16 @@ function _getHistRawData (param) {
 function _insertHistRawData (params, callback) {
   try {
     var bulk = HistRawData.collection.initializeUnorderedBulkOp();
-    for (let i = 0; i < params.length; i++) {
+    let count = params.length;
+    for (let i = 0; i < count; i++) {
       bulk.insert(params[i]);
     }
-    bulk.execute();
-    callback();
+    bulk.execute((err, result) => {
+      if (err) {
+        return callback(err);
+      }
+      callback();
+    });
   } catch (ex) {
     callback(ex);
   }
