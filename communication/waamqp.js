@@ -18,7 +18,7 @@ function _publish (topic, message) {
     let routingKey = topic.replace(/\//g, '.');
     let content = JSON.stringify(message);
     let buffer = Buffer.alloc(content.length, content);
-    channel.publish(exchangeName, routingKey, buffer, { persistent: false }, function (err, result) {
+    channel.publish(exchangeName, routingKey, buffer, { persistent: false }, (err, result) => {
       if (err) {
         console.error('[AMQP] publish', err);
       }
@@ -55,7 +55,7 @@ function _connect (uri, type, callback) {
       setTimeout(_connect(uri, type, callback), 1000);
     });
     connection = conn;
-    connection.createChannel(function (err, ch) {
+    connection.createChannel((err, ch) => {
       if (err) {
         callback(err);
         return;
@@ -69,7 +69,7 @@ function _connect (uri, type, callback) {
           ch.bindQueue(amqpQueue.cfgQ, exchangeName, amqpTopics.configTopic.replace(/\//g, '.'));
           // ch.bindQueue(amqpQueue.notifyQ, exchangeName, amqpTopics.notifyTopic.replace(/\//g, '.'));
           ch.prefetch(1);
-          ch.consume(amqpQueue.cfgQ, function (msg) {
+          ch.consume(amqpQueue.cfgQ, (msg) => {
             let buff = msg.fields.routingKey.split('.');
             if (buff.length !== 6) {
               return;
@@ -91,7 +91,7 @@ function _connect (uri, type, callback) {
           ch.bindQueue(amqpQueue.dataQ, exchangeName, amqpTopics.dataTopic.replace(/\//g, '.'));
 
           ch.prefetch(1);
-          ch.consume(amqpQueue.dataQ, function (msg) {
+          ch.consume(amqpQueue.dataQ, (msg) => {
             let buff = msg.fields.routingKey.split('.');
             if (buff.length !== 6) {
               return;

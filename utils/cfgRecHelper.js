@@ -152,7 +152,7 @@ function _syncDeviceConfig (ids, callback) {
         }
 
         let pubTopic = util.format(mqttTopics.cmdTopic, tenantId, scadaId);
-        wamqtt.publish(pubTopic, msg, function (err) {
+        wamqtt.publish(pubTopic, msg, (err) => {
           if (err) {
             callback(err);
           }

@@ -1,10 +1,10 @@
 'use strict';
 
-const datastore = require('./api/datastore.js');
-const deviceManager = require('./api/device-manager.js');
-const waamqp = require('./communication/waamqp.js');
-const wamqtt = require('./communication/wamqtt.js');
-const waTopics = require('./common/watopics.js');
+const datastore = require('./api/datastore');
+const deviceManager = require('./api/device-manager');
+const waamqp = require('./communication/waamqp');
+const wamqtt = require('./communication/wamqtt');
+const waTopics = require('./common/watopics');
 
 const constant = require('./common/const');
 

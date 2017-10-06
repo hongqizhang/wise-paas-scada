@@ -111,7 +111,7 @@ function _connect (conf) {
       events.emit('reconnect');
     });
 
-    client.on('message', function (topic, message) {
+    client.on('message', (topic, message) => {
       let buff = topic.split('/');
       if (buff.length !== 6) {
         return;

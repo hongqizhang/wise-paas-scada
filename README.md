@@ -85,7 +85,7 @@ let t2 = {
   tagName: 'Foo2'
 };
 
-datastore.getRealData([t1, t2], function (err, response) {
+datastore.getRealData([t1, t2],  (err, response) => {
   if (err) {
     console.error(err);
   } else {
@@ -114,7 +114,7 @@ let t1 = {
   ts: new Date()
 };
 
-datastore.upsertRealData(scadaId, t1, function (err, response) {
+datastore.upsertRealData(scadaId, t1,  (err, response)=>  {
   if (err) {
     console.error(err);
   } else {
@@ -143,7 +143,7 @@ let t1 = {
   ts: new Date()
 };
 
-datastore.updateRealData(scadaId, t1, function (err, response) {
+datastore.updateRealData(scadaId, t1,  (err, response) => {
   if (err) {
     console.error(err);
   } else {
@@ -165,7 +165,7 @@ For example:
 
 ```js
 
-datastore.deleteRealDataByScadaId('scada1', function (err, response) {
+datastore.deleteRealDataByScadaId('scada1', (err, response) => {
   if (err) {
     console.error(err);
   } else {

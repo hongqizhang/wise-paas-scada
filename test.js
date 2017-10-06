@@ -18,8 +18,8 @@ let mqttConf = {
 let conf = {
   hostname: 'ei-mongodb-replica-stage.eastasia.cloudapp.azure.com',
   port: 27017,
-  username: 'e5a8fe79-e29e-4d71-a244-4bb2c3f3746d',
-  password: 'lMAvjVHrFSlN7rgN9D8kwljaa',
+  username: '7b801d2b-5417-47a4-a1c4-a216e840a95d',
+  password: 'BLDYfE6zhbU4VHghUjesBuZYD',
   database: 'f78eaf9c-d8a5-41ab-b464-90d29f2c2460'
 };
 
@@ -59,19 +59,22 @@ let histQueryParam = {
   startTs: new Date('2015-01-01'),
   endTs: new Date(),
   orderby: -1,
-  limit: 2
+  limit: 10
 };
 
 let histQueryParam1 = {
   tags: [{
     scadaId: 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce',
     tagName: 'TestAO01'
+  }, {
+    scadaId: '5374cfcc-8537-46b7-8c19-6c0d9a636a64',
+    tagName: 'TestAO02'
   }],
-  startTs: new Date('2015-01-01'),
-  interval: 100,
+  startTs: new Date('2017-09-21T11:05:00.000Z'),
+  interval: 10,
   intervalType: wisePaasScada.const.intervalType.second,  // second, minute, hour, day
   dataType: wisePaasScada.const.dataType.last,  // last, min, max, avg
-  limit: 10000
+  limit: 1000
 };
 
 function _getValueProc () {
@@ -86,13 +89,24 @@ function _getValueProc () {
 }
 setTimeout(_getValueProc, 1000);
 
-console.time('getHistRawData');
+/* console.time('getHistRawData');
 datastore.getHistRawData(histQueryParam, function (err, result) {
   if (err) {
     console.error(err);
   } else {
     console.timeEnd('getHistRawData');
-    console.log('getHistData: ');
+    console.log('getHistRawData: ');
+    console.log(JSON.stringify(result));
+  }
+}); */
+
+console.time('getHistDataLog');
+datastore.getHistDataLog(histQueryParam1, function (err, result) {
+  if (err) {
+    console.error(err);
+  } else {
+    console.timeEnd('getHistDataLog');
+    console.log('getHistDataLog: ');
     console.log(JSON.stringify(result));
   }
 });
