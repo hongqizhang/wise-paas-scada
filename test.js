@@ -71,10 +71,10 @@ let histQueryParam1 = {
     tagName: 'TestAO02'
   }],
   startTs: new Date('2017-09-21T11:05:00.000Z'),
-  interval: 10,
+  interval: 1,
   intervalType: wisePaasScada.const.intervalType.second,  // second, minute, hour, day
   dataType: wisePaasScada.const.dataType.last,  // last, min, max, avg
-  limit: 1000
+  limit: 10000
 };
 
 function _getValueProc () {
@@ -89,7 +89,7 @@ function _getValueProc () {
 }
 setTimeout(_getValueProc, 1000);
 
-/* console.time('getHistRawData');
+console.time('getHistRawData');
 datastore.getHistRawData(histQueryParam, function (err, result) {
   if (err) {
     console.error(err);
@@ -98,7 +98,7 @@ datastore.getHistRawData(histQueryParam, function (err, result) {
     console.log('getHistRawData: ');
     console.log(JSON.stringify(result));
   }
-}); */
+});
 
 console.time('getHistDataLog');
 datastore.getHistDataLog(histQueryParam1, function (err, result) {

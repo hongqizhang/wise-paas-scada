@@ -85,25 +85,28 @@ function _getHistRawData (param) {
                 }
               }
               HistRawData.find({ scadaId: scadaId, tagName: tagName, ts: { '$lt': startTs } }).sort({ ts: -1 })
-              .hint({ scadaId: 1, tagName: 1, ts: 1 }).limit(1).exec((err, results) => {
-                if (err) {
-                  reject(err);
-                } else {
-                  let prevValue = (results && results.length > 0 && results[0].value) ? results[0].value : constant.badTagValue;
-                  for (let i = 0; i < values.length; i++) {
-                    if (values[i].value === constant.badTagValue && prevValue !== constant.badTagValue) {
-                      values[i].value = prevValue;
-                    } else {
-                      prevValue = values[i].value;
+                .hint({ scadaId: 1, tagName: 1, ts: 1 }).limit(1).exec((err, results) => {
+                  if (err) {
+                    reject(err);
+                  } else {
+                    let prevValue = (results && results.length > 0 && results[0].value) ? results[0].value : constant.badTagValue;
+                    for (let i = 0; i < values.length; i++) {
+                      if (values[i].value === constant.badTagValue && prevValue !== constant.badTagValue) {
+                        values[i].value = prevValue;
+                      } else {
+                        prevValue = values[i].value;
+                      }
                     }
+                    output.values = values;
+                    resolve(output);
                   }
-                  output.values = values;
-                  resolve(output);
-                }
-              });
+                });
             } else {
+              output.values = values;
               resolve(output);
             }
+          } else {
+            resolve(output);
           }
         }
       });
