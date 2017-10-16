@@ -44,10 +44,6 @@ function _updateRealData (scadaId, params, options, callback) {
       return callback(new Error('scadaId can not be null !'));
     }
 
-    if (params.length === 0) {
-      return callback(new Error('input can not be null !'));
-    }
-
     let upsert = options.upsert || false;
     RealData.findOneAndUpdate({ _id: scadaId }, { $setOnInsert: { tags: {} } }, { upsert: upsert, new: true }, (err, doc) => {
       if (err) {

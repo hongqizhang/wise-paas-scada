@@ -5,8 +5,8 @@ const Promise = require('bluebird');
 const constant = require('../common/const');
 const mongodb = require('../db/mongodb');
 const wamqtt = require('../communication/wamqtt');
-const realDataHelper = require('../common/realDataHelper');
-const histDataHelper = require('../common/histDataHelper');
+const realDataHelper = require('../utils/realDataHelper');
+const histDataHelper = require('../utils/histDataHelper');
 const scadaCmdHelper = require('../utils/scadaCmdHelper');
 
 function _init (mongoConf, mqttConf) {
@@ -186,13 +186,11 @@ function _insertHistRawData (params, callback) {
   histDataHelper.insertHistRawData(params, callback);
 }
 
-function _writeTagValue (param, callback) {
-  let type = typeof param.value;
-  if (param.value === null || type === 'undefined') {
-    return callback(new Error('value can not be null !'));
+function _writeTagValue (params, callback) {
+  if (!params) {
+    return callback(new Error('input can not be null !'));
   }
-
-  scadaCmdHelper.writeTagValue(param, callback);
+  scadaCmdHelper.writeTagValue(params, callback);
 }
 
 module.exports = {
