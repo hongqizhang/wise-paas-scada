@@ -11,6 +11,7 @@ function _getHistRawData (param) {
       let condition = {};
 
       let scadaId = param.scadaId;
+      let deviceId = param.deviceId;
       let tagName = param.tagName;
       let startTs = param.startTs;
       let endTs = param.endTs;
@@ -26,6 +27,7 @@ function _getHistRawData (param) {
       }
 
       condition.scadaId = scadaId;
+      // condition.deviceId = deviceId;
       condition.tagName = tagName;
       condition.ts = { '$lte': new Date() };
 
@@ -54,6 +56,7 @@ function _getHistRawData (param) {
         } else {
           let output = {
             scadaId: scadaId,
+            deviceId: deviceId,
             tagName: tagName,
             values: []
           };

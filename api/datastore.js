@@ -90,6 +90,7 @@ function _getHistRawData (param, callback) {
     Promise.map(tags, (tag) => {
       return histDataHelper.getHistRawData({
         scadaId: tag.scadaId,
+        deviceId: tag.deviceId,
         tagName: tag.tagName,
         startTs: startTs,
         endTs: endTs,
@@ -160,6 +161,7 @@ function _getHistDataLog (param, callback) {
     Promise.map(tags, (tag) => {
       return histDataHelper.getHistRawData({
         scadaId: tag.scadaId,
+        deviceId: tag.deviceId,
         tagName: tag.tagName,
         startTs: startTs,
         endTs: endTs,
