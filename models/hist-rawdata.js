@@ -13,6 +13,10 @@ let histDataSchema = new Schema({
   ts: {
     type: Date,
     default: Date.now
+  },
+  opTS: {
+    type: Date,
+    default: Date.now
   }
 }, { collection: 'scada_HistRawData', versionKey: false });
 

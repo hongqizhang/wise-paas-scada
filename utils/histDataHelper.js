@@ -124,6 +124,8 @@ function _insertHistRawData (params, callback) {
     var bulk = HistRawData.collection.initializeUnorderedBulkOp();
     let count = params.length;
     for (let i = 0; i < count; i++) {
+      let param = params[i];
+      param.opTS = new Date();
       bulk.insert(params[i]);
     }
     bulk.execute((err, result) => {
