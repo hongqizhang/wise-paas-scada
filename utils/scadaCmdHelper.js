@@ -35,8 +35,8 @@ function _writeTagValue (params, callback) {
           }
         });
       });
-    }).then((results) => {
-      callback(null, results);
+    }).then(() => {
+      callback(null);
     })
     .catch((err) => {
       callback(err);
