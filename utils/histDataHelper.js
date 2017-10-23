@@ -125,7 +125,7 @@ function _insertHistRawData (params, callback) {
     let count = params.length;
     for (let i = 0; i < count; i++) {
       let param = params[i];
-      if (!param.value || param.value === constant.badTagValue) {
+      if (typeof param.value === 'undefined' || param.value === constant.badTagValue) {
         continue;
       }
       if (typeof param.ts === 'string') {
@@ -133,6 +133,9 @@ function _insertHistRawData (params, callback) {
       }
       param.opTS = new Date();
       bulk.insert(params[i]);
+    }
+    if (bulk.length === 0) {
+      return callback();
     }
     bulk.execute((err, result) => {
       if (err) {
