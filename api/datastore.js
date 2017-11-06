@@ -132,7 +132,7 @@ function _getHistDataLog (param, callback) {
     let endTs = new Date();
     let interval = param.interval || 1;
     let orderby = param.orderby || 1;   // default is ASC
-    let limit = param.limit || 0;
+    let limit = param.limit;
     let intervalType = param.intervalType || constant.intervalType.second;  // 'S', 'M', 'H', 'D'
     let dataType = param.dataType || constant.dataType.last;   // 'LAST', 'MIN', 'MAX', 'AVG'
 
@@ -142,6 +142,10 @@ function _getHistDataLog (param, callback) {
 
     if (!startTs || startTs instanceof Date === false) {
       return callback(new Error('The format of start time must be Date !'));
+    }
+
+    if (!limit || Number.isInteger(limit) === false || limit < 0) {
+      return callback(new Error('The limit must be positive !'));
     }
 
     switch (intervalType) {

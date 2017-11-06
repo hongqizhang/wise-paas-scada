@@ -9,6 +9,7 @@ function _getHistRawData (param) {
   return new Promise((resolve, reject) => {
     try {
       let condition = {};
+      let pipeline = [];
 
       let scadaId = param.scadaId;
       let deviceId = param.deviceId;
@@ -45,12 +46,20 @@ function _getHistRawData (param) {
         condition.ts['$lte'] = endTs;
       }
 
-      HistRawData.aggregate({ $match: condition }, { $sort: { ts: orderby } }, { $limit: limit }, {
+      pipeline.push({ $match: condition });
+      pipeline.push({ $sort: { ts: orderby } });
+      if (filled === false) {
+        pipeline.push({ $limit: limit });
+      }
+      pipeline.push({
         $group: {
           _id: { scadaId: '$scadaId', tagName: '$tagName' },
           values: { $push: { value: '$value', ts: '$ts' } }
         }
-      }, { $project: { _id: 0 } }, (err, results) => {
+      });
+      pipeline.push({ $project: { _id: 0 } });
+
+      HistRawData.aggregate(pipeline, (err, results) => {
         if (err) {
           reject(err);
         } else {
@@ -147,6 +156,34 @@ function _insertHistRawData (params, callback) {
     callback(ex);
   }
 }
+
+/* function _insertHistRawData (params, callback) {
+  try {
+    let hist = {
+      scadaId: params[0].scadaId,
+      ts: new Date(params[0].ts),
+      opTS: new Date(),
+      tags: []
+    };
+    let count = params.length;
+    for (let i = 0; i < count; i++) {
+      let param = params[i];
+      if (typeof param.value === 'undefined' || param.value === constant.badTagValue) {
+        continue;
+      }
+      if (typeof param.ts === 'string') {
+        param.ts = new Date(param.ts);
+      }
+
+      hist.tags.push({ name: param.tagName, value: param.value });
+    }
+
+    HistRawData.collection.insert(hist);
+    callback();
+  } catch (ex) {
+    callback(ex);
+  }
+} */
 
 module.exports = {
   getHistRawData: _getHistRawData,

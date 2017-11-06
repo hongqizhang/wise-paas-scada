@@ -9,18 +9,18 @@ const deviceManager = wisePaasScada.deviceManager;
 
 // MQTT
 let mqttConf = {
-  host: '172.16.12.211',
+  host: '127.0.0.1',
   port: 1883,
   username: 'admin',
   password: 'admin'
 };
 
 let conf = {
-  hostname: '172.16.12.211',
+  hostname: '127.0.0.1',
   port: 27017,
-  username: 'wisepaas',
-  password: 'wisepaas',
-  database: 'WISE-PaaS'
+  username: 'admin',
+  password: 'admin',
+  database: 'foo'
 };
 
 datastore.init(conf, mqttConf);
