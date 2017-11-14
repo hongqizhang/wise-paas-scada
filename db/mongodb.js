@@ -22,8 +22,26 @@ function _connect (conf) {
 
   mongoose.Promise = Promise;
   let db = mongoose.connection;
-  db.once('open', () => { console.log('[mongodb] Connect success !'); });
-  db.on('error', (err) => { console.error('[mongodb] Connect error ! ' + err); });
+  // db.once('open', () => { console.log('[mongodb] open success !'); });
+  db.on('error', (err) => {
+    console.error('[mongodb] Connect error ! ');
+    if (err && err.message) {
+      console.error(err.message);
+    }
+  });
+  db.on('connected', () => {
+    console.log('[mongodb] Connect success !');
+  });
+  db.on('disconnected', () => {
+    console.log('[mongodb] Disconnected ! Try to connect...');
+    setTimeout(() => {
+      mongoose.connect(util.format('mongodb://%s:%s@%s:%d/%s',
+      conf.username, conf.password, conf.hostname, conf.port, conf.database), options)
+      .catch((err) => {
+        console.error(err.message);
+      });
+    }, 3000);
+  });
 }
 
 function _disconnect () {
