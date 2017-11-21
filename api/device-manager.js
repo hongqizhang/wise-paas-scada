@@ -10,27 +10,6 @@ const cfgRecHelper = require('../utils/cfgRecHelper.js');
 
 const defaultHbtFreq = 5;
 
-function __getDeviceStatus (ids, callback) {
-  DeviceStatus.find({ _id: { $in: ids } }, (err, results) => {
-    if (err) {
-      callback(err);
-    } else {
-      let response = [];
-      for (let i = 0; i < results.length; i++) {
-        let result = results[i];
-        let device = {
-          id: result._id,
-          status: (result && typeof result.status !== 'undefined') ? result.status : false,
-          modified: (result && typeof result.modified !== 'undefined') ? result.modified : false,
-          ts: (result) ? result.ts : new Date()
-        };
-        response.push(device);
-      }
-      callback(null, response);
-    }
-  });
-}
-
 function _init (mongoConf, mqttConf) {
   if (mongodb && mongodb.isConnected() === false && mongodb.isConnecting() === false) {
     mongodb.connect(mongoConf);
@@ -68,13 +47,31 @@ function _quit () {
 
 function _getDeviceStatus (ids, callback) {
   try {
-    let params = [];
+    let dIds = [];
     if (Array.isArray(ids)) {
-      params = ids;
+      dIds = ids;
     } else {
-      params.push(ids);
+      dIds.push(ids);
     }
-    __getDeviceStatus(params, callback);
+    DeviceStatus.find({ _id: { $in: dIds } }, (err, results) => {
+      if (err) {
+        callback(err);
+      } else {
+        let response = [];
+        for (let i = 0; i < dIds.length; i++) {
+          let id = dIds[i];
+          let result = results.find(d => d._id === id);
+          let device = {
+            id: id,
+            status: (result && typeof result.status !== 'undefined') ? result.status : false,
+            modified: (result && typeof result.modified !== 'undefined') ? result.modified : false,
+            ts: (result) ? result.ts : new Date()
+          };
+          response.push(device);
+        }
+        callback(null, response);
+      }
+    });
   } catch (err) {
     callback(err);
   }
