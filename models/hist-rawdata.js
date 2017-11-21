@@ -21,6 +21,8 @@ let histDataSchema = new Schema({
 }, { collection: 'scada_HistRawData', versionKey: false });
 
 histDataSchema.index({ scadaId: 1, tagName: 1, ts: 1 }, { unique: true });
+histDataSchema.index({ scadaId: 1, tagName: 1, opTS: 1 }, { unique: false });
+histDataSchema.index({ ts: 1 }, { unique: false });
 
 /* let subSchema = new Schema({
   name: String,
