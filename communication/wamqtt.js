@@ -113,15 +113,15 @@ function _connect (conf) {
 
     client.on('message', (topic, message) => {
       let buff = topic.split('/');
-      if (buff.length !== 6) {
+      if (buff.length !== 5) {
         return;
       }
       let msg = {
-        tenantId: buff[2],
-        scadaId: buff[4],
+        // tenantId: buff[2],
+        scadaId: buff[3],
         content: message
       };
-      switch (buff[5]) {
+      switch (buff[4]) {
         case 'conn':
           events.emit('conn', msg);
           break;

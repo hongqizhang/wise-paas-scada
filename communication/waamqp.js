@@ -71,11 +71,11 @@ function _connect (uri, type, callback) {
           ch.prefetch(1);
           ch.consume(amqpQueue.cfgQ, (msg) => {
             let buff = msg.fields.routingKey.split('.');
-            if (buff.length !== 6) {
+            if (buff.length !== 5) {
               return;
             }
-            msg.tenantId = buff[2];
-            msg.scadaId = buff[4];
+            // msg.tenantId = buff[2];
+            msg.scadaId = buff[3];
             events.emit('config', msg);
           }, { noAck: false });
           break;
@@ -93,11 +93,11 @@ function _connect (uri, type, callback) {
           ch.prefetch(1);
           ch.consume(amqpQueue.dataQ, (msg) => {
             let buff = msg.fields.routingKey.split('.');
-            if (buff.length !== 6) {
+            if (buff.length !== 5) {
               return;
             }
-            msg.tenantId = buff[2];
-            msg.scadaId = buff[4];
+            // msg.tenantId = buff[2];
+            msg.scadaId = buff[3];
             events.emit('data', msg);
           }, { noAck: false });
           break;

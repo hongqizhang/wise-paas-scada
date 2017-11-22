@@ -8,7 +8,6 @@ const ConfigRecord = require('../models/config-record.js');
 const constant = require('../common/const.js');
 
 const mqttTopics = watopics.mqttTopics;
-const tenantId = constant.tenantId;
 
 const cfgRecordBeforeKey = ['scadaDesc', 'deviceIP', 'devicePort', 'deviceDesc', 'tagDesc', 'dataLog', 'engUnit',
   'intDspFmt', 'fraDspFmt', 'spanHigh', 'spanLow', 'state0', 'state1', 'state2', 'state3', 'state4', 'state5', 'state6',
@@ -28,23 +27,6 @@ function __findOrCreateConfigRecord (id, callback) {
       : ConfigRecord.create({ _id: id }, (err, result) => {
         return callback(err, result);
       });
-  });
-}
-
-function _addModifiedConfigRecord (id, record, callback) {
-  // if device status not exists, create one.
-  __findOrCreateConfigRecord(id, (err, result) => {
-    if (err) {
-      return callback(err);
-    }
-    ConfigRecord.findOneAndUpdate({ _id: id }, { $push: { records: { scada: record, ts: new Date() } } },
-    { upsert: true }, (err, result) => {
-      if (err) {
-        return callback(err);
-      }
-      let response = { ok: (result !== null) };
-      callback(null, response);
-    });
   });
 }
 
@@ -103,18 +85,35 @@ function __waitAllSyncAck (results, retryCount, callback) {
   }, 1000);
 }
 
-function replacer (key, value) {
+function __replacer (key, value) {
   if (typeof value === 'boolean') {
     return Number(value);
   }
   return value;
 }
 
+function _addModifiedConfigRecord (id, record, callback) {
+  // if device status not exists, create one.
+  __findOrCreateConfigRecord(id, (err, result) => {
+    if (err) {
+      return callback(err);
+    }
+    ConfigRecord.findOneAndUpdate({ _id: id }, { $push: { records: { scada: record, ts: new Date() } } },
+    { upsert: true }, (err, result) => {
+      if (err) {
+        return callback(err);
+      }
+      let response = { ok: (result !== null) };
+      callback(null, response);
+    });
+  });
+}
+
 function _syncDeviceConfig (ids, callback) {
   try {
     let results = [];
     // subscribe cfgack topic for receiving ack from scada
-    let subTopic = util.format(mqttTopics.cfgackTopic, tenantId, '+');
+    let subTopic = util.format(mqttTopics.cfgackTopic, '+');
     wamqtt.subscribe(subTopic);
     wamqtt.events.on('message', (topic, message) => {
       let ack = JSON.parse(message.content.toString());
@@ -144,14 +143,29 @@ function _syncDeviceConfig (ids, callback) {
         if (err) {
           return console.error(err);
         }
-        let cmdObj = { d: { Cmd: 'WC', Action: 2, TenantID: tenantId, Scada: result }, ts: new Date() };
-        let msg = JSON.stringify(cmdObj, replacer);
+        let cmdList = [];
+        let cmdObj = {};
+        for (let scada in result) {
+          if (scada == null || Object.keys(scada).length === 0) {
+            cmdObj = { d: { Cmd: 'WC', Action: 3, Scada: scada }, ts: new Date() };
+            cmdList.add(cmdObj);
+            continue;
+          }
+          for (let device in scada) {
+            if (device == null || Object.keys(device).length === 0) {
+              cmdObj = { d: { Cmd: 'WC', Action: 3, Scada: {} }, ts: new Date() };
+              continue;
+            }
+          }
+        }
+        cmdObj = { d: { Cmd: 'WC', Action: 2, Scada: result }, ts: new Date() };
+        let msg = JSON.stringify(cmdObj, __replacer);
         for (let i = 0; i < cfgRecordBeforeKey.length; i++) {
           var regex = new RegExp(cfgRecordBeforeKey[i], 'g');
           msg = msg.replace(regex, cfgRecordAfterKey[i]);
         }
 
-        let pubTopic = util.format(mqttTopics.cmdTopic, tenantId, scadaId);
+        let pubTopic = util.format(mqttTopics.cmdTopic, scadaId);
         wamqtt.publish(pubTopic, msg, (err) => {
           if (err) {
             callback(err);

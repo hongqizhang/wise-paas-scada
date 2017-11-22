@@ -1,11 +1,11 @@
 'use strict';
 
 module.exports.amqpTopics = {
-  configTopic: '/wisepaas/*/scada/*/cfg',   // /wisepaas/<tenantId>/scada/<scadaId>/cfg
-  dataTopic: '/wisepaas/*/scada/*/data',
-  connTopic: '/wisepaas/*/scada/*/conn',
-  cmdTopic: '/wisepaas/*/scada/*/cmd',
-  notifyTopic: '/wisepaas/*/scada/*/notify'         // for cloud app to notify worker
+  configTopic: '/wisepaas/scada/*/cfg',   // /wisepaas/scada/<scadaId>/cfg
+  dataTopic: '/wisepaas/scada/*/data',
+  connTopic: '/wisepaas/scada/*/conn',
+  cmdTopic: '/wisepaas/scada/*/cmd',
+  notifyTopic: '/wisepaas/scada/*/notify'         // for cloud app to notify worker
 };
 
 module.exports.amqpQueue = {
@@ -17,12 +17,12 @@ module.exports.amqpQueue = {
 };
 
 module.exports.mqttTopics = {
-  configTopic: '/wisepaas/%s/scada/%s/cfg',   // /wisepaas/<tenantId>/scada/<scadaId>/cfg
-  dataTopic: '/wisepaas/%s/scada/%s/data',
-  connTopic: '/wisepaas/%s/scada/%s/conn',
-  cmdTopic: '/wisepaas/%s/scada/%s/cmd',
-  ackTopic: '/wisepaas/%s/scada/%s/ack',
-  cfgackTopic: '/wisepaas/%s/scada/%s/cfgack',
-  notifyTopic: '/wisepaas/%s/scada/%s/notify'         // for cloud app to notify worker
+  configTopic: '/wisepaas/scada/%s/cfg',   // /wisepaas/scada/<scadaId>/cfg
+  dataTopic: '/wisepaas/scada/%s/data',
+  connTopic: '/wisepaas/scada/%s/conn',
+  cmdTopic: '/wisepaas/scada/%s/cmd',
+  ackTopic: '/wisepaas/scada/%s/ack',
+  cfgackTopic: '/wisepaas/scada/%s/cfgack',
+  notifyTopic: '/wisepaas/scada/%s/notify'         // for cloud app to notify worker
 
 };
