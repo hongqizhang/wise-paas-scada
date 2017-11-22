@@ -65,6 +65,8 @@ function _connect (uri, type, callback) {
         case 'config':
           ch.assertQueue(amqpQueue.cfgQ, { durable: true });
           // ch.assertQueue(amqpQueue.notifyQ, { durable: true });
+          ch.unbindQueue('waCfgQ', exchangeName, '.wisepaas.*.scada.*.cfg');
+          ch.deleteQueue('waCfgQ');
           // binding mqtt topic to queue, and '/' must be replaced to '.' in topic
           ch.bindQueue(amqpQueue.cfgQ, exchangeName, amqpTopics.configTopic.replace(/\//g, '.'));
           // ch.bindQueue(amqpQueue.notifyQ, exchangeName, amqpTopics.notifyTopic.replace(/\//g, '.'));
@@ -82,11 +84,8 @@ function _connect (uri, type, callback) {
         case 'data':
           ch.assertQueue(amqpQueue.dataQ, { durable: true });
 
-          ch.unbindQueue(amqpQueue.connQ, exchangeName, amqpTopics.connTopic.replace(/\//g, '.'));
-          ch.unbindQueue(amqpQueue.cmdQ, exchangeName, amqpTopics.cmdTopic.replace(/\//g, '.'));
-          ch.deleteQueue(amqpQueue.connQ);
-          ch.deleteQueue(amqpQueue.cmdQ);
-
+          ch.unbindQueue('waDataQ', exchangeName, '.wisepaas.*.scada.*.data');
+          ch.deleteQueue('waDataQ');
           // binding mqtt topic to queue, and '/' must be replaced to '.' in topic
           ch.bindQueue(amqpQueue.dataQ, exchangeName, amqpTopics.dataTopic.replace(/\//g, '.'));
 

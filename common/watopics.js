@@ -9,11 +9,11 @@ module.exports.amqpTopics = {
 };
 
 module.exports.amqpQueue = {
-  cfgQ: 'waCfgQ',
-  dataQ: 'waDataQ',
-  connQ: 'waConnQ',
-  cmdQ: 'waCmdQ',
-  notifyQ: 'waNotifyQ'
+  cfgQ: 'scada-ConfigQueue',
+  dataQ: 'scada-DataQueue',
+  connQ: 'scada-ConnQueue',
+  cmdQ: 'scada-CmdQueue',
+  notifyQ: 'scada-NotifyQueue'
 };
 
 module.exports.mqttTopics = {
