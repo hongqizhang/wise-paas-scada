@@ -126,9 +126,9 @@ function _connect (conf) {
           events.emit('conn', msg);
           break;
         default:
+          events.emit('message', topic, msg);
           break;
       }
-      events.emit('message', topic, msg);
     });
   } catch (ex) {
     console.error('[wamqtt] connect error ! ' + ex);
