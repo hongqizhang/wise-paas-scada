@@ -134,8 +134,16 @@ function _insertHistRawData (params, callback) {
     let count = params.length;
     for (let i = 0; i < count; i++) {
       let param = params[i];
-      if (typeof param.value === 'undefined' || param.value === constant.badTagValue) {
+      if (typeof param.value === 'undefined') {
         continue;
+      } else if (param.value === constant.badTagValue) {
+        continue;
+      } else if (typeof param.value === 'object') {
+        for (let key in param.value) {
+          if (param.value[key] === constant.badTagValue) {
+            delete param.value[key];
+          }
+        }
       }
       if (typeof param.ts === 'string') {
         param.ts = new Date(param.ts);
