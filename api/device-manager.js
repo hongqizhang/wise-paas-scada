@@ -10,6 +10,24 @@ const cfgRecHelper = require('../utils/cfgRecHelper.js');
 
 const defaultHbtFreq = 5;
 
+function __updateModifiedStatus (id, modified, callback) {
+  callback = callback || function () { };
+  return new Promise((resolve, reject) => {
+    DeviceStatus.update({ _id: id }, { modified: modified }, { upsert: false }, (err, result) => {
+      if (err) {
+        reject(err);
+        return callback(err);
+      }
+      let response = { ok: false };
+      if (result && result.n) {
+        response.ok = (result.n === 1);
+      }
+      resolve(response);
+      callback(null, response);
+    });
+  });
+}
+
 function _init (mongoConf, mqttConf) {
   if (mongodb && mongodb.isConnected() === false && mongodb.isConnecting() === false) {
     mongodb.connect(mongoConf);
@@ -46,17 +64,20 @@ function _quit () {
 }
 
 function _getDeviceStatus (ids, callback) {
-  try {
-    let dIds = [];
-    if (Array.isArray(ids)) {
-      dIds = ids;
-    } else {
-      dIds.push(ids);
-    }
-    DeviceStatus.find({ _id: { $in: dIds } }, (err, results) => {
-      if (err) {
-        callback(err);
+  callback = callback || function () { };
+  return new Promise((resolve, reject) => {
+    try {
+      let dIds = [];
+      if (Array.isArray(ids)) {
+        dIds = ids;
       } else {
+        dIds.push(ids);
+      }
+      DeviceStatus.find({ _id: { $in: dIds } }, (err, results) => {
+        if (err) {
+          reject(err);
+          return callback(err);
+        }
         let response = [];
         for (let i = 0; i < dIds.length; i++) {
           let id = dIds[i];
@@ -69,41 +90,14 @@ function _getDeviceStatus (ids, callback) {
           };
           response.push(device);
         }
+        resolve(response);
         callback(null, response);
-      }
-    });
-  } catch (err) {
-    callback(err);
-  }
-}
-
-function _updateModifiedStatus (id, modified, callback) {
-  if (callback === null || typeof callback === 'undefined') {
-    return new Promise((resolve, reject) => {
-      DeviceStatus.update({ _id: id }, { modified: modified }, { upsert: false }, (err, result) => {
-        if (err) {
-          reject(err);
-        } else {
-          let response = { ok: false };
-          if (result && result.n) {
-            response.ok = (result.n === 1);
-          }
-          resolve(response);
-        }
       });
-    });
-  } else {
-    DeviceStatus.update({ _id: id }, { modified: modified }, { upsert: false }, (err, result) => {
-      if (err) {
-        return callback(err);
-      }
-      let response = { ok: false };
-      if (result && result.n) {
-        response.ok = (result.n === 1);
-      }
-      callback(null, response);
-    });
-  }
+    } catch (err) {
+      reject(err);
+      callback(err);
+    }
+  });
 }
 
 /* function _insertDeviceStatus (param, callback) {
@@ -124,112 +118,145 @@ function _updateModifiedStatus (id, modified, callback) {
 } */
 
 function _updateDeviceStatus (id, param, callback) {
-  let set = {};
-  for (let key in param) {
-    set[key] = param[key];
-  }
-  set.ts = param.ts || new Date();
-  DeviceStatus.update({ _id: id }, set, (err, result) => {
-    if (err) {
-      callback(err);
-      return;
+  callback = callback || function () { };
+  return new Promise((resolve, reject) => {
+    let set = {};
+    for (let key in param) {
+      set[key] = param[key];
     }
-    let response = { ok: false };
-    if (result && result.n) {
-      response.ok = (result.n > 0);
-    }
-    callback(null, response);
+    set.ts = param.ts || new Date();
+    DeviceStatus.update({ _id: id }, set, (err, result) => {
+      if (err) {
+        reject(err);
+        return callback(err);
+      }
+      let response = { ok: false };
+      if (result && result.n) {
+        response.ok = (result.n > 0);
+      }
+      resolve(response);
+      callback(null, response);
+    });
   });
 }
 
 function _upsertDeviceStatus (id, params, callback) {
-  DeviceStatus.update({ _id: id }, {
-    _id: id,
-    status: params.status || false,
-    freq: params.freq || defaultHbtFreq,
-    modified: params.modified || false,
-    ts: params.ts || new Date()
-  }, { upsert: true }, (err, result) => {
-    if (err) {
-      callback(err);
-      return;
-    }
-    let response = { ok: false };
-    if (result && result.n) {
-      response.ok = (result.n > 0);
-    }
-    callback(null, response);
+  callback = callback || function () { };
+  return new Promise((resolve, reject) => {
+    DeviceStatus.update({ _id: id }, {
+      _id: id,
+      status: params.status || false,
+      freq: params.freq || defaultHbtFreq,
+      modified: params.modified || false,
+      ts: params.ts || new Date()
+    }, { upsert: true }, (err, result) => {
+      if (err) {
+        reject(err);
+        return callback(err);
+      }
+      let response = { ok: false };
+      if (result && result.n) {
+        response.ok = (result.n > 0);
+      }
+      resolve(response);
+      callback(null, response);
+    });
   });
 }
 
 function _deleteDeviceStatus (id, callback) {
-  if (!id) {
-    let err = 'id can not be null !';
-    return callback(err);
-  }
-  DeviceStatus.remove({ _id: id }, (err, result) => {
-    if (err) {
-      callback(err);
-      return;
+  callback = callback || function () { };
+  return new Promise((resolve, reject) => {
+    if (!id) {
+      let err = 'id can not be null !';
+      reject(err);
+      return callback(err);
     }
-    let response = { ok: false };
-    if (result && result.result && result.result.n) {
-      response.ok = (result.n > 0);
-    }
-    callback(null, response);
+    DeviceStatus.remove({ _id: id }, (err, result) => {
+      if (err) {
+        reject(err);
+        return callback(err);
+      }
+      let response = { ok: false };
+      if (result && result.result && result.result.n) {
+        response.ok = (result.n > 0);
+      }
+      resolve(response);
+      callback(null, response);
+    });
   });
 }
 
 function _addModifiedConfigRecord (id, record, callback) {
-  try {
-    if (!id) {
-      let err = 'id can not be null !';
-      return callback(err);
-    }
-    if (!record) {
-      let err = 'record can not be null !';
-      return callback(err);
-    }
-
-    cfgRecHelper.addModifiedConfigRecord(id, record, (err, result) => {
-      if (err) {
+  callback = callback || function () { };
+  return new Promise((resolve, reject) => {
+    try {
+      if (!id) {
+        let err = new Error('id can not be null !');
+        reject(err);
         return callback(err);
       }
-      _updateDeviceStatus(id, { modified: true }, (err, result) => {
-        return callback(err, result);
+      if (!record) {
+        let err = new Error('record can not be null !');
+        reject(err);
+        return callback(err);
+      }
+
+      cfgRecHelper.addModifiedConfigRecord(id, record, (err, result) => {
+        if (err) {
+          reject(err);
+          return callback(err);
+        }
+        _updateDeviceStatus(id, { modified: true }, (err, result) => {
+          if (err) {
+            reject(err);
+            return callback(err);
+          }
+          resolve(result);
+          return callback(null, result);
+        });
       });
-    });
-  } catch (err) {
-    callback(err);
-  }
+    } catch (err) {
+      reject(err);
+      callback(err);
+    }
+  });
 }
 
 function _syncDeviceConfig (ids, callback) {
-  if (Array.isArray(ids) === false) {
-    let err = 'iput type must be array !';
-    return callback(err);
-  }
-  if (ids.length === 0) {
-    let err = 'input needs at least one id !';
-    return callback(err);
-  }
-  cfgRecHelper.syncDeviceConfig(ids, (err, results) => {
-    if (err) {
+  callback = callback || function () { };
+  return new Promise((resolve, reject) => {
+    if (Array.isArray(ids) === false) {
+      let err = new Error('iput type must be array !');
+      reject(err);
       return callback(err);
     }
-    // set modified status to false
-    let promises = [];
-    for (let i = 0; i < ids.length; i++) {
-      if (results[i].ok === true) {
-        promises.push(_updateModifiedStatus(ids[i], false));
-      }
+    if (ids.length === 0) {
+      let err = new Error('input needs at least one id !');
+      reject(err);
+      return callback(err);
     }
-    Promise.all(promises)
-    .then(() => {
-      callback(null, results);
-    })
-    .catch((err) => {
-      callback(err);
+    cfgRecHelper.syncDeviceConfig(ids, (err, results) => {
+      if (err) {
+        reject(err);
+        return callback(err);
+      }
+      // set modified status to false
+      let promises = [];
+      for (let i = 0; i < ids.length; i++) {
+        if (results[i].ok === true) {
+          promises.push(__updateModifiedStatus(ids[i], false));
+        }
+      }
+      Promise.all(promises)
+        .then(() => {
+          resolve(results);
+          callback(null, results);
+        })
+        .catch((err) => {
+          reject(err);
+          callback(err);
+        });
     });
   });
 }
