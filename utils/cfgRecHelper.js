@@ -16,8 +16,8 @@ const cfgRecordAfterKey = ['Desc', 'IP', 'Port', 'Desc', 'Desc', 'Log', 'EU', 'I
   'S3', 'S4', 'S5', 'S6', 'S7'];
 
 const errorMessage = {
-  updateFailed: 'SCADA [%s] update configuration error ! Please contact the administrator of SCADA.',
-  noRecvAck: 'SCADA [%s] has no response. Please contact the administrator of SCADA.'
+  updateFailed: 'SCADA [%s] update configuration error ! Please contact the administrator.',
+  noRecvAck: 'SCADA [%s] has no response. Please contact the administrator.'
 };
 
 function __findOrCreateConfigRecord (id, callback) {
@@ -38,10 +38,14 @@ function __mergeModifiedConfigRecord (id, callback) {
       }
       let mergedObj = {};
       if (result && result.records) {
-        let records = [];
         for (let i = 0; i < result.records.length; i++) {
-          records.push(result.records[i].scada);
-          mergedObj = merge.recursive(true, mergedObj, result.records[i].scada);
+          let scada = result.records[i].scada;
+          if (scada[id] === null || Object.keys(scada[id]).length === 0) {
+            mergedObj = result.records[i].scada;
+            break;
+          } else {
+            mergedObj = merge.recursive(true, mergedObj, scada);
+          }
         }
       }
       callback(null, mergedObj);
@@ -143,28 +147,42 @@ function _syncDeviceConfig (ids, callback) {
         if (err) {
           return console.error(err);
         }
-        let cmdList = [];
         let cmdObj = {};
-        for (let scada in result) {
-          if (scada == null || Object.keys(scada).length === 0) {
-            cmdObj = { d: { Cmd: 'WC', Action: 3, Scada: scada }, ts: new Date() };
-            cmdList.add(cmdObj);
+        for (let scadaId in result) {
+          let scada = result[scadaId];
+          if (scada === null) {
+            result[scadaId] = {};
             continue;
           }
-          for (let device in scada) {
-            if (device == null || Object.keys(device).length === 0) {
-              cmdObj = { d: { Cmd: 'WC', Action: 3, Scada: {} }, ts: new Date() };
+          let devices = scada.Device;
+          for (let deviceId in devices) {
+            let device = devices[deviceId];
+            if (device === null) {
+              result[scadaId].Device[deviceId] = {};
               continue;
+            }
+            let tags = device.Tag;
+            for (let tagName in tags) {
+              let tag = tags[tagName];
+              if (tag === null) {
+                result[scadaId].Device[deviceId].Tag[tagName] = {};
+                continue;
+              }
             }
           }
         }
-        cmdObj = { d: { Cmd: 'WC', Action: 2, Scada: result }, ts: new Date() };
+
+        if (result && Object.keys(result[scadaId]).length > 0) {
+          cmdObj = { d: { Cmd: 'WC', Action: 3, Scada: result }, ts: new Date() };
+        } else {
+          cmdObj = { d: { Cmd: 'WC', Action: 2, Scada: result }, ts: new Date() };
+        }
+
         let msg = JSON.stringify(cmdObj, __replacer);
         for (let i = 0; i < cfgRecordBeforeKey.length; i++) {
           var regex = new RegExp(cfgRecordBeforeKey[i], 'g');
           msg = msg.replace(regex, cfgRecordAfterKey[i]);
         }
-
         let pubTopic = util.format(mqttTopics.cmdTopic, scadaId);
         wamqtt.publish(pubTopic, msg, (err) => {
           if (err) {
