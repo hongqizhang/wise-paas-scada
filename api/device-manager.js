@@ -196,11 +196,11 @@ function _addModifiedConfigRecord (id, record, callback) {
         reject(err);
         return callback(err);
       }
-      if (!record) {
+      /* if (!record) {
         let err = new Error('record can not be null !');
         reject(err);
         return callback(err);
-      }
+      } */
 
       cfgRecHelper.addModifiedConfigRecord(id, record, (err, result) => {
         if (err) {
