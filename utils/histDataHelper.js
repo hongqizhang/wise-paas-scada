@@ -18,7 +18,7 @@ function _getHistRawData (param) {
       let endTs = param.endTs;
       let interval = param.interval;
       let orderby = param.orderby || 1;   // default is ASC
-      let limit = param.limit || 0;
+      let limit = param.limit || 1;
       let filled = param.filled || false;
 
       if (param.condition) {
@@ -83,37 +83,46 @@ function _getHistRawData (param) {
               values.push({ value: constant.badTagValue, ts: new Date((startTsSec + i * interval) * 1000) });
             }
 
-            if (output.values.length > 0) {
-              for (let i = 0; i < output.values.length; i++) {
-                let tick = output.values[i];
-                let tickTsSec = Math.floor(tick.ts.getTime() / 1000);
-                let index = parseInt((tickTsSec - startTsSec) / interval);
-                let mod = (tickTsSec - startTsSec) % interval;
-                if (mod > 0) {
-                  index++;
+            // if (output.values.length > 0) {
+            for (let i = 0; i < output.values.length; i++) {
+              let tick = output.values[i];
+              let tickTsSec = Math.floor(tick.ts.getTime() / 1000);
+              let index = parseInt((tickTsSec - startTsSec) / interval);
+              let mod = (tickTsSec - startTsSec) % interval;
+              if (mod > 0) {
+                index++;
+              }
+              if (index < count) {
+                values[index].value = tick.value;
+              }
+            }
+            if (values.length > 0 && values[0].value === constant.badTagValue) {
+              HistRawData.find({ scadaId: scadaId, tagName: tagName, ts: { '$lt': startTs } }).sort({ ts: -1 })
+              .hint({ scadaId: 1, tagName: 1, ts: 1 }).limit(1).exec((err, results) => {
+                if (err) {
+                  reject(err);
+                } else {
+                  let prevValue = (results && results.length > 0 && results[0].value) ? results[0].value : constant.badTagValue;
+                  for (let i = 0; i < values.length; i++) {
+                    if (values[i].value === constant.badTagValue && prevValue !== constant.badTagValue) {
+                      values[i].value = prevValue;
+                    } else {
+                      prevValue = values[i].value;
+                    }
+                  }
+                  output.values = values;
+                  resolve(output);
                 }
-                if (index < count) {
-                  values[index].value = tick.value;
+              });
+            } else {
+              let prevValue = constant.badTagValue;
+              for (let i = 0; i < values.length; i++) {
+                if (values[i].value === constant.badTagValue && prevValue !== constant.badTagValue) {
+                  values[i].value = prevValue;
+                } else {
+                  prevValue = values[i].value;
                 }
               }
-              HistRawData.find({ scadaId: scadaId, tagName: tagName, ts: { '$lt': startTs } }).sort({ ts: -1 })
-                .hint({ scadaId: 1, tagName: 1, ts: 1 }).limit(1).exec((err, results) => {
-                  if (err) {
-                    reject(err);
-                  } else {
-                    let prevValue = (results && results.length > 0 && results[0].value) ? results[0].value : constant.badTagValue;
-                    for (let i = 0; i < values.length; i++) {
-                      if (values[i].value === constant.badTagValue && prevValue !== constant.badTagValue) {
-                        values[i].value = prevValue;
-                      } else {
-                        prevValue = values[i].value;
-                      }
-                    }
-                    output.values = values;
-                    resolve(output);
-                  }
-                });
-            } else {
               output.values = values;
               resolve(output);
             }
