@@ -19,8 +19,10 @@ module.exports.amqpQueue = {
 module.exports.mqttTopics = {
   configTopic: '/wisepaas/scada/%s/cfg',   // /wisepaas/scada/<scadaId>/cfg
   dataTopic: '/wisepaas/scada/%s/data',
-  connTopic: '/wisepaas/scada/%s/conn',
-  cmdTopic: '/wisepaas/scada/%s/cmd',
+  scadaConnTopic: '/wisepaas/scada/%s/conn',
+  deviceConnTopic: '/wisepaas/scada/%s/%s/conn',   // wisepaas/scada/<scadaId>/<deviceId>/conn
+  scadaCmdTopic: '/wisepaas/scada/%s/cmd',
+  deviceCmdTopic: '/wisepaas/scada/%s/%s/cmd',
   ackTopic: '/wisepaas/scada/%s/ack',
   cfgackTopic: '/wisepaas/scada/%s/cfgack',
   notifyTopic: '/wisepaas/scada/%s/notify'         // for cloud app to notify worker

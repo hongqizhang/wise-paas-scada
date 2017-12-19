@@ -183,7 +183,7 @@ function _syncDeviceConfig (ids, callback) {
           var regex = new RegExp(cfgRecordBeforeKey[i], 'g');
           msg = msg.replace(regex, cfgRecordAfterKey[i]);
         }
-        let pubTopic = util.format(mqttTopics.cmdTopic, scadaId);
+        let pubTopic = util.format(mqttTopics.scadaCmdTopic, scadaId);
         wamqtt.publish(pubTopic, msg, (err) => {
           if (err) {
             callback(err);

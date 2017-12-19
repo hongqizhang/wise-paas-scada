@@ -17,7 +17,7 @@ function _writeTagValue (params, callback) {
 
     Promise.mapSeries(params, (param, index) => {
       return new Promise((resolve, reject) => {
-        let topic = util.format(mqttTopics.cmdTopic, param.scadaId);
+        let topic = util.format(mqttTopics.scadaCmdTopic, param.scadaId);
         let value = param.value;
         if (param.hasOwnProperty('index') === true) {   // for array tag
           value = {};
