@@ -66,7 +66,8 @@ function _getDeviceStatus (param, callback) {
         for (let i = 0; i < params.length; i++) {
           let param = params[i];
           let obj = {
-            id: param.deviceId,
+            scadaId: param.scadaId,
+            deviceId: param.deviceId,
             status: false,
             ts: new Date()
           };
