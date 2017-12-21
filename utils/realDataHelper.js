@@ -22,7 +22,7 @@ function _getRealData (params, callback) {
           if (doc && doc.tags && doc.tags[param.tagName]) {
             tag = doc.tags[param.tagName];
           }
-          param.value = (typeof tag.value !== 'undefined') ? tag.value : constant.badTagValue;
+          param.value = (tag.value !== undefined) ? tag.value : constant.badTagValue;
           param.ts = tag.ts || '';
         });
 
