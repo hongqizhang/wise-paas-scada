@@ -113,15 +113,21 @@ function _connect (conf) {
 
     client.on('message', (topic, message) => {
       let buff = topic.split('/');
-      if (buff.length !== 5) {
+      if (buff.length !== 5 && buff.length !== 6) {
         return;
       }
       let msg = {
-        // tenantId: buff[2],
         scadaId: buff[3],
         content: message
       };
-      switch (buff[4]) {
+      let action = '';
+      if (buff.length === 5) {
+        action = buff[4];
+      } else if (buff.length === 6) {
+        action = buff[5];
+        msg.deviceId = buff[4];
+      }
+      switch (action) {
         case 'conn':
           events.emit('conn', msg);
           break;

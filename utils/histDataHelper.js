@@ -183,7 +183,7 @@ function _insertHistRawData (params, callback) {
     let count = params.length;
     for (let i = 0; i < count; i++) {
       let param = params[i];
-      if (typeof param.value === 'undefined') {
+      if (param.value === undefined) {
         continue;
       } else if (param.value === constant.badTagValue) {
         continue;
@@ -225,7 +225,7 @@ function _insertHistRawData (params, callback) {
     let count = params.length;
     for (let i = 0; i < count; i++) {
       let param = params[i];
-      if (typeof param.value === 'undefined' || param.value === constant.badTagValue) {
+      if (param.value === undefined || param.value === constant.badTagValue) {
         continue;
       }
       if (typeof param.ts === 'string') {

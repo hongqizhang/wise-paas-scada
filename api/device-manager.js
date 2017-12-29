@@ -66,7 +66,8 @@ function _getDeviceStatus (param, callback) {
         for (let i = 0; i < params.length; i++) {
           let param = params[i];
           let obj = {
-            id: param.deviceId,
+            scadaId: param.scadaId,
+            deviceId: param.deviceId,
             status: false,
             ts: new Date()
           };
@@ -74,8 +75,8 @@ function _getDeviceStatus (param, callback) {
           if (scada) {
             let device = scada.devices.find(d => d.d === param.deviceId);
             if (device) {
-              obj.status = (device.status !== 'undefined') ? device.status : false;
-              obj.ts = (device.ts !== 'undefined') ? device.ts : new Date();
+              obj.status = (device.status !== undefined) ? device.status : false;
+              obj.ts = (device.ts !== undefined) ? device.ts : new Date();
             }
           }
           response.push(obj);

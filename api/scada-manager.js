@@ -84,8 +84,8 @@ function _getScadaStatus (ids, callback) {
           let result = results.find(d => d._id === id);
           let scada = {
             id: id,
-            status: (result && typeof result.status !== 'undefined') ? result.status : false,
-            modified: (result && typeof result.modified !== 'undefined') ? result.modified : false,
+            status: (result && result.status !== undefined) ? result.status : false,
+            modified: (result && result.modified !== undefined) ? result.modified : false,
             ts: (result) ? result.ts : new Date()
           };
           response.push(scada);
