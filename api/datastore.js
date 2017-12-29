@@ -174,7 +174,6 @@ function _getHistDataLog (param, callback) {
       let orderby = param.orderby || 1;   // default is ASC
       let limit = param.limit;
       let intervalType = param.intervalType || constant.intervalType.second;  // 'S', 'M', 'H', 'D'
-      let dataType = param.dataType || constant.dataType.last;   // 'LAST', 'MIN', 'MAX', 'AVG'
 
       if (!tags || tags.length === 0) {
         let err = new Error('The tag can bot be null !');
@@ -194,18 +193,23 @@ function _getHistDataLog (param, callback) {
         return callback(err);
       }
 
+      let intervalRange = constant.intervalRange.second;
       switch (intervalType) {
         case constant.intervalType.second:
-          endTs.setTime(startTs.getTime() + interval * limit * 1000);
+          intervalRange = constant.intervalRange.second;
+          endTs.setTime(startTs.getTime() + interval * limit * intervalRange);
           break;
         case constant.intervalType.minute:
-          return callback(new Error('No support currently !'));
+          intervalRange = constant.intervalRange.minute;
+          endTs.setTime(startTs.getTime() + interval * limit * intervalRange);
           break;
         case constant.intervalType.hour:
-          return callback(new Error('No support currently !'));
+          intervalRange = constant.intervalRange.hour;
+          endTs.setTime(startTs.getTime() + interval * limit * intervalRange);
           break;
         case constant.intervalType.day:
-          return callback(new Error('No support currently !'));
+          intervalRange = constant.intervalRange.day;
+          endTs.setTime(startTs.getTime() + interval * limit * intervalRange);
           break;
       }
       Promise.map(tags, (tag) => {
@@ -213,11 +217,14 @@ function _getHistDataLog (param, callback) {
           scadaId: tag.scadaId,
           deviceId: tag.deviceId,
           tagName: tag.tagName,
+          dataType: tag.dataType,
           startTs: startTs,
           endTs: endTs,
           orderby: orderby,
           limit: limit,
           interval: interval,
+          intervalType: intervalType,
+          intervalRange: intervalRange,
           filled: true
         });
       }).then((results) => {

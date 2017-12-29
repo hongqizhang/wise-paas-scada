@@ -3,6 +3,10 @@
 const Promise = require('bluebird');
 
 const constant = require('../common/const');
+const HistSecData = require('../models/hist-secdata');
+const HistMinData = require('../models/hist-mindata');
+const HistHorData = require('../models/hist-hourdata');
+const HistDayData = require('../models/hist-daydata');
 const HistRawData = require('../models/hist-rawdata');
 
 function _getHistRawData (param) {
@@ -14,9 +18,12 @@ function _getHistRawData (param) {
       let scadaId = param.scadaId;
       let deviceId = param.deviceId;
       let tagName = param.tagName;
+      let dataType = param.dataType;
       let startTs = param.startTs;
       let endTs = param.endTs;
       let interval = param.interval;
+      let intervalType = param.intervalType;
+      let intervalRange = param.intervalRange;
       let orderby = param.orderby || 1;   // default is ASC
       let limit = param.limit || 1;
       let filled = param.filled || false;
@@ -26,25 +33,41 @@ function _getHistRawData (param) {
           condition[key] = param.condition[key];
         }
       }
-
       condition.scadaId = scadaId;
       // condition.deviceId = deviceId;
       condition.tagName = tagName;
       condition.ts = { '$lte': new Date() };
-
       if (startTs) {
         if (startTs instanceof Date === false) {
           return reject(new Error('The format of start time must be Date !'));
         }
         condition.ts['$gte'] = startTs;
       }
-
       if (endTs) {
         if (endTs instanceof Date === false) {
           return reject(new Error('The format of end time must be Date !'));
         }
         condition.ts['$lte'] = endTs;
       }
+      let dbDataType = '$last';
+      switch (dataType) {
+        case constant.dataType.min:
+          dbDataType = '$min';
+          break;
+        case constant.dataType.max:
+          dbDataType = '$max';
+          break;
+        case constant.dataType.last:
+          dbDataType = '$last';
+          break;
+        case constant.dataType.avg:
+          dbDataType = '$avg';
+          break;
+        case constant.dataType.sum:
+          dbDataType = '$sum';
+          break;
+      }
+      if (intervalType === constant.intervalType.second) dbDataType = '$value';
 
       pipeline.push({ $match: condition });
       pipeline.push({ $sort: { ts: orderby } });
@@ -54,12 +77,28 @@ function _getHistRawData (param) {
       pipeline.push({
         $group: {
           _id: { scadaId: '$scadaId', tagName: '$tagName' },
-          values: { $push: { value: '$value', ts: '$ts' } }
+          values: { $push: { value: dbDataType, ts: '$ts' } }
         }
       });
       pipeline.push({ $project: { _id: 0 } });
+      // console.log('query = ', JSON.stringify(pipeline));
 
-      HistRawData.aggregate(pipeline, (err, results) => {
+      let collPointer = HistSecData;
+      switch (intervalType) {
+        case constant.intervalType.second:
+          collPointer = HistSecData;
+          break;
+        case constant.intervalType.minute:
+          collPointer = HistMinData;
+          break;
+        case constant.intervalType.hour:
+          collPointer = HistHorData;
+          break;
+        case constant.intervalType.day:
+          collPointer = HistDayData;
+          break;
+      }
+      collPointer.aggregate(pipeline, (err, results) => {
         if (err) {
           reject(err);
         } else {
@@ -69,26 +108,26 @@ function _getHistRawData (param) {
             tagName: tagName,
             values: []
           };
-
           if (results.length > 0) {
             output.values = results[0].values;
           }
-
           if (filled) {
-            let startTsSec = Math.floor(startTs.getTime() / 1000);
+            let startTsSec = startTs.getTime();
             let count = limit;
-
             let values = [];
             for (let i = 0; i < count; i++) {
-              values.push({ value: constant.badTagValue, ts: new Date((startTsSec + i * interval) * 1000) });
+              let intTs = new Date();
+              intTs.setTime(startTsSec + (i * interval * intervalRange));
+              values.push({value: constant.badTagValue, ts: intTs});
             }
-
+            // console.log('filled values = ', values);
             // if (output.values.length > 0) {
             for (let i = 0; i < output.values.length; i++) {
               let tick = output.values[i];
-              let tickTsSec = Math.floor(tick.ts.getTime() / 1000);
-              let index = parseInt((tickTsSec - startTsSec) / interval);
-              let mod = (tickTsSec - startTsSec) % interval;
+              //console.log('tick = ', tick);
+              let tickTsSec = tick.ts.getTime();
+              let index = parseInt((tickTsSec - startTsSec) / (interval * intervalRange));
+              let mod = (tickTsSec - startTsSec) % (interval * intervalRange);
               if (mod > 0) {
                 index++;
               }
@@ -96,8 +135,9 @@ function _getHistRawData (param) {
                 values[index].value = tick.value;
               }
             }
+            // console.log('tick_values = ', values);
             if (values.length > 0 && values[0].value === constant.badTagValue) {
-              HistRawData.find({ scadaId: scadaId, tagName: tagName, ts: { '$lt': startTs } }).sort({ ts: -1 })
+              collPointer.find({ scadaId: scadaId, tagName: tagName, ts: { '$lt': startTs } }).sort({ ts: -1 })
               .hint({ scadaId: 1, tagName: 1, ts: 1 }).limit(1).exec((err, results) => {
                 if (err) {
                   reject(err);

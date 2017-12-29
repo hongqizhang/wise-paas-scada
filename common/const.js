@@ -13,6 +13,13 @@ module.exports = {
     last: 0,
     min: 1,
     max: 2,
-    avg: 3
+    avg: 3,
+    sum: 4
+  },
+  intervalRange: {
+    second: 1000,
+    minute: (1000 * 60),
+    hour: (1000 * 60 * 60),
+    day: (1000 * 60 * 60 * 24)
   }
 };
