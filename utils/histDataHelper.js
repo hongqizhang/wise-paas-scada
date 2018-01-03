@@ -22,8 +22,8 @@ function _getHistRawData (param) {
       let startTs = param.startTs;
       let endTs = param.endTs;
       let interval = param.interval;
-      let intervalType = param.intervalType;
-      let intervalRange = param.intervalRange;
+      let intervalType = param.intervalType || constant.intervalType.second;
+      let intervalRange = param.intervalRange || constant.intervalRange.second;
       let orderby = param.orderby || 1;   // default is ASC
       let limit = param.limit || 1;
       let filled = param.filled || false;
@@ -124,7 +124,7 @@ function _getHistRawData (param) {
             // if (output.values.length > 0) {
             for (let i = 0; i < output.values.length; i++) {
               let tick = output.values[i];
-              //console.log('tick = ', tick);
+              // console.log('tick = ', tick);
               let tickTsSec = tick.ts.getTime();
               let index = parseInt((tickTsSec - startTsSec) / (interval * intervalRange));
               let mod = (tickTsSec - startTsSec) % (interval * intervalRange);
@@ -177,41 +177,43 @@ function _getHistRawData (param) {
   });
 }
 
-function _insertHistRawData (params, callback) {
-  try {
-    var bulk = HistRawData.collection.initializeUnorderedBulkOp();
-    let count = params.length;
-    for (let i = 0; i < count; i++) {
-      let param = params[i];
-      if (param.value === undefined) {
-        continue;
-      } else if (param.value === constant.badTagValue) {
-        continue;
-      } else if (typeof param.value === 'object') {
-        for (let key in param.value) {
-          if (param.value[key] === constant.badTagValue) {
-            delete param.value[key];
+function _insertHistRawData (params) {
+  return new Promise((resolve, reject) => {
+    try {
+      var bulk = HistRawData.collection.initializeUnorderedBulkOp();
+      let count = params.length;
+      for (let i = 0; i < count; i++) {
+        let param = params[i];
+        if (param.value === undefined) {
+          continue;
+        } else if (param.value === constant.badTagValue) {
+          continue;
+        } else if (typeof param.value === 'object') {
+          for (let key in param.value) {
+            if (param.value[key] === constant.badTagValue) {
+              delete param.value[key];
+            }
           }
         }
+        if (typeof param.ts === 'string') {
+          param.ts = new Date(param.ts);
+        }
+        param.opTS = new Date();
+        bulk.insert(params[i]);
       }
-      if (typeof param.ts === 'string') {
-        param.ts = new Date(param.ts);
+      if (bulk.length === 0) {
+        return resolve();
       }
-      param.opTS = new Date();
-      bulk.insert(params[i]);
+      bulk.execute((err, result) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve();
+      });
+    } catch (ex) {
+      reject(ex);
     }
-    if (bulk.length === 0) {
-      return callback();
-    }
-    bulk.execute((err, result) => {
-      if (err) {
-        return callback(err);
-      }
-      callback();
-    });
-  } catch (ex) {
-    callback(ex);
-  }
+  });
 }
 
 /* function _insertHistRawData (params, callback) {
