@@ -1,11 +1,11 @@
 'use strict';
 
 module.exports.amqpTopics = {
-  configTopic: '/wisepaas/scada/*/cfg',   // /wisepaas/scada/<scadaId>/cfg
-  dataTopic: '/wisepaas/scada/*/data',
-  connTopic: '/wisepaas/scada/*/conn',
-  cmdTopic: '/wisepaas/scada/*/cmd',
-  notifyTopic: '/wisepaas/scada/*/notify'         // for cloud app to notify worker
+  baseTopic: '.wisepaas.scada.*',
+  configTopic: '.wisepaas.scada.*.cfg',   // /wisepaas/scada/<scadaId>/cfg
+  dataTopic: '.wisepaas.scada.*.data',
+  connTopic: '.wisepaas.scada.*.conn',
+  cmdTopic: '.wisepaas.scada.*.cmd'
 };
 
 module.exports.amqpQueue = {

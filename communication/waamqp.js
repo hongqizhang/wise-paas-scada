@@ -52,18 +52,13 @@ function _connect (uri, callback) {
         return callback(err);
       }
 
-      ch.unbindQueue('waCfgQ', exchangeName, '.wisepaas.*.scada.*.cfg');
-      ch.deleteQueue('waCfgQ');
-      ch.unbindQueue('waDataQ', exchangeName, '.wisepaas.*.scada.*.data');
-      ch.deleteQueue('waDataQ');
-
       ch.assertQueue(amqpQueue.cfgQ, { durable: true });
       ch.assertQueue(amqpQueue.dataQ, { durable: true });
       // ch.assertQueue(amqpQueue.notifyQ, { durable: true });
 
       // binding mqtt topic to queue, and '/' must be replaced to '.' in topic
-      ch.bindQueue(amqpQueue.cfgQ, exchangeName, amqpTopics.configTopic.replace(/\//g, '.'));
-      ch.bindQueue(amqpQueue.dataQ, exchangeName, amqpTopics.dataTopic.replace(/\//g, '.'));
+      ch.bindQueue(amqpQueue.cfgQ, exchangeName, amqpTopics.configTopic);
+      ch.bindQueue(amqpQueue.dataQ, exchangeName, amqpTopics.dataTopic);
       // ch.bindQueue(amqpQueue.notifyQ, exchangeName, amqpTopics.notifyTopic.replace(/\//g, '.'));
 
       ch.prefetch(1);
