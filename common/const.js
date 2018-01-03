@@ -21,5 +21,9 @@ module.exports = {
     minute: (1000 * 60),
     hour: (1000 * 60 * 60),
     day: (1000 * 60 * 60 * 24)
+  },
+  databaseType: {
+    mongodb: 'mongodb',
+    influxdb: 'influxdb'
   }
 };

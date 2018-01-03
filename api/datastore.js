@@ -4,16 +4,59 @@ const Promise = require('bluebird');
 
 const constant = require('../common/const');
 const mongodb = require('../db/mongodb');
+const influxdb = require('../db/influxdb');
 const wamqtt = require('../communication/wamqtt');
+const histDataFactory = require('../factory/histDataFactory');
 const realDataHelper = require('../utils/realDataHelper');
-const histDataHelper = require('../utils/histDataHelper');
 const scadaCmdHelper = require('../utils/scadaCmdHelper');
 
-function _init (mongoConf, mqttConf) {
+let histDataHelper = null;
+
+function _init (options) {
+  if (!options) {
+    return;
+  }
+
+  let mongoConf = options.mongoConf;
+  let mqttConf = options.mqttConf;
+  let influxConf = options.influxConf;
+  let histDBType = options.histDBType;
+
+  histDataHelper = histDataFactory.createHistDataHelper(histDBType);
+
+  if (mongoConf && mongodb.isConnected() === false && mongodb.isConnecting() === false) {
+    mongodb.connect(mongoConf);
+  }
+
+  if (influxConf) {
+    influxdb.connect(influxConf);
+  }
+
+  if (mqttConf && wamqtt.isConnected() === false && wamqtt.isConnecting() === false) {
+    wamqtt.connect(mqttConf);
+    wamqtt.events.on('connect', () => {
+      console.log('[wamqtt] Connect success !');
+    });
+    wamqtt.events.on('close', () => {
+      console.log('[wamqtt] connection close...');
+    });
+    wamqtt.events.on('offline', () => {
+      console.log('[wamqtt] Connect offline !');
+    });
+    wamqtt.events.on('error', (error) => {
+      console.error('[wamqtt] something is wrong ! ' + error);
+    });
+    wamqtt.events.on('reconnect', () => {
+      console.log('[wamqtt] try to reconnect...');
+    });
+  }
+}
+
+/* function _init (mongoConf, mqttConf) {
   if (mongodb && mongodb.isConnected() === false && mongodb.isConnecting() === false) {
     mongodb.connect(mongoConf);
   }
-  if (wamqtt) {
+  if (mqttConf) {
     if (wamqtt && wamqtt.isConnected() === false && wamqtt.isConnecting() === false) {
       wamqtt.connect(mqttConf);
       wamqtt.events.on('connect', () => {
@@ -33,11 +76,14 @@ function _init (mongoConf, mqttConf) {
       });
     }
   }
-}
+} */
 
 function _quit () {
   if (mongodb) {
     mongodb.disconnect();
+  }
+  if (wamqtt) {
+    wamqtt.close();
   }
 }
 
@@ -251,8 +297,13 @@ function _insertHistRawData (params, callback) {
       reject(err);
       callback(err);
     }
-    histDataHelper.insertHistRawData(params, (err) => {
-      (err) ? reject(err) : resolve();
+    histDataHelper.insertHistRawData(params)
+    .then(() => {
+      resolve();
+      callback();
+    })
+    .catch((err) => {
+      reject(err);
       callback(err);
     });
   });

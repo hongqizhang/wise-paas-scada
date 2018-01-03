@@ -3,6 +3,7 @@
 const util = require('util');
 var Promise = require('bluebird');
 const wisePaasScada = require('./index.js');
+const constant = require('./common/const');
 
 const datastore = wisePaasScada.datastore;
 const scadaManager = wisePaasScada.scadaManager;
@@ -24,7 +25,20 @@ let conf = {
   database: 'database'
 };
 
-datastore.init(conf, mqttConf);
+let influxConf = {
+  host: '127.0.0.1',
+  database: 'test',
+  port: 8086,
+  username: '',
+  password: ''
+};
+
+datastore.init({
+  mongoConf: conf,
+  mqttConf: mqttConf,
+  influxConf: influxConf,
+  histDBType: constant.databaseType.influxdb
+});
 scadaManager.init(conf, mqttConf);
 deviceManager.init(conf, mqttConf);
 
@@ -52,12 +66,12 @@ let histParam1 = {
 
 let histQueryParam = {
   tags: [{
-    scadaId: 'c906ec27-45f4-4c83-abeb-56f28bddca88',
-    deviceId: 'P01_Modsim',
-    tagName: 'FANUC2:ParTotal'
+    scadaId: 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce',
+    deviceId: 'P01_Device',
+    tagName: 'TestAO1'
   }],
-  startTs: new Date('2017-10-31'),
-  endTs: new Date('2017-11-05'),
+  startTs: new Date('2018-01-02 07:00:00Z'),
+  endTs: new Date(),
   limit: 10000
 };
 
@@ -82,8 +96,8 @@ let histQueryParam1 = {
   }
 }); */
 
-/* console.time('getHistRawData');
-datastore.getHistRawData(histQueryParam, function (err, result) {
+console.time('getHistRawData');
+datastore.getHistDataLog(histQueryParam, function (err, result) {
   if (err) {
     console.error(err);
   } else {
@@ -91,7 +105,7 @@ datastore.getHistRawData(histQueryParam, function (err, result) {
     console.log('getHistRawData: ');
     console.log(JSON.stringify(result));
   }
-}); */
+});
 
 /* console.time('getHistDataLog');
 datastore.getHistDataLog(histQueryParam1, function (err, result) {
@@ -107,16 +121,12 @@ datastore.getHistDataLog(histQueryParam1, function (err, result) {
 function padLeft (str, lenght) {
   if (str.length >= lenght) { return str; } else { return padLeft('0' + str, lenght); }
 }
-/* let params = [];
-let param = {};
-param['cca312df-4d73-4672-b1ad-ddeae0801ccb'] = { Device: {} };
-param['cca312df-4d73-4672-b1ad-ddeae0801ccb'].Device['qq'] = null;
-var record = {};
-record['cca312df-4d73-4672-b1ad-ddeae0801ccb'] = null;
-scadaManager.addModifiedConfigRecord('cca312df-4d73-4672-b1ad-ddeae0801ccb', record)
+/* var record = {};
+record['3b0c87a4-ed0a-4734-9c1e-be95513f71fe'] = null;
+scadaManager.addModifiedConfigRecord('3b0c87a4-ed0a-4734-9c1e-be95513f71fe', record)
   .then((result) => {
     console.log(result);
-    scadaManager.syncScadaConfig(['cca312df-4d73-4672-b1ad-ddeae0801ccb'])
+    scadaManager.syncScadaConfig(['3b0c87a4-ed0a-4734-9c1e-be95513f71fe'])
     .then((result) => {
       console.log(result);
     })
@@ -171,20 +181,22 @@ setTimeout(_queryHist, 1000); */
       scadaId: 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce',
       deviceId: 'P01_Device',
       tagName: 'TestAO' + i,
+      value: Math.floor(Math.random() * 100),
       ts: new Date()
     });
   }
+  console.time('insertHistRawData');
   datastore.insertHistRawData(tags, function (err, result) {
     if (err) {
       console.error(err);
     } else {
+      console.timeEnd('insertHistRawData');
       console.log('insertHistData: ');
       setTimeout(_insertHist, 1000);
     }
   });
 }
-setTimeout(_insertHist, 1000); */
-
+_insertHist(); */
 /* let arr = [];
 for (let i = 0; i < 1000; i++) {
   arr.push(
