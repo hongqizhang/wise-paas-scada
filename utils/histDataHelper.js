@@ -3,7 +3,6 @@
 const Promise = require('bluebird');
 
 const constant = require('../common/const');
-const HistSecData = require('../models/hist-secdata');
 const HistMinData = require('../models/hist-mindata');
 const HistHorData = require('../models/hist-hourdata');
 const HistDayData = require('../models/hist-daydata');
@@ -83,10 +82,10 @@ function _getHistRawData (param) {
       pipeline.push({ $project: { _id: 0 } });
       // console.log('query = ', JSON.stringify(pipeline));
 
-      let collPointer = HistSecData;
+      let collPointer = HistRawData;
       switch (intervalType) {
         case constant.intervalType.second:
-          collPointer = HistSecData;
+          collPointer = HistRawData;
           break;
         case constant.intervalType.minute:
           collPointer = HistMinData;
@@ -124,7 +123,6 @@ function _getHistRawData (param) {
             // if (output.values.length > 0) {
             for (let i = 0; i < output.values.length; i++) {
               let tick = output.values[i];
-              // console.log('tick = ', tick);
               let tickTsSec = tick.ts.getTime();
               let index = parseInt((tickTsSec - startTsSec) / (interval * intervalRange));
               let mod = (tickTsSec - startTsSec) % (interval * intervalRange);
