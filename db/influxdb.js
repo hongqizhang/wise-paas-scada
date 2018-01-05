@@ -5,6 +5,9 @@ const Influx = require('influx');
 let _influxdb = null;
 
 function _connect (conf) {
+  if (!conf) {
+    return console.error('[influxdb] no config !');
+  }
   _influxdb = new Influx.InfluxDB({
     host: conf.host,
     database: conf.database,
