@@ -193,11 +193,14 @@ function _insertHistRawData (params) {
             }
           }
         }
+        if (param.hasOwnProperty('deviceId')) {
+          delete param.deviceId;
+        }
         if (typeof param.ts === 'string') {
           param.ts = new Date(param.ts);
         }
         param.opTS = new Date();
-        bulk.insert(params[i]);
+        bulk.insert(param);
       }
       if (bulk.length === 0) {
         return resolve();

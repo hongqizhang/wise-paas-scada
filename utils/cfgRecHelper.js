@@ -9,11 +9,10 @@ const constant = require('../common/const.js');
 
 const mqttTopics = watopics.mqttTopics;
 
-const cfgRecordBeforeKey = ['scadaDesc', 'deviceIP', 'devicePort', 'deviceDesc', 'tagDesc', 'dataLog', 'engUnit',
-  'intDspFmt', 'fraDspFmt', 'spanHigh', 'spanLow', 'state0', 'state1', 'state2', 'state3', 'state4', 'state5', 'state6',
-  'state7'];
-const cfgRecordAfterKey = ['Desc', 'IP', 'Port', 'Desc', 'Desc', 'Log', 'EU', 'IDF', 'FDF', 'SH', 'SL', 'S0', 'S1', 'S2',
-  'S3', 'S4', 'S5', 'S6', 'S7'];
+const cfgRecordBeforeKey = ['description', 'deviceIP', 'devicePort', 'dataLog', 'engUnit', 'intDspFmt', 'fraDspFmt',
+  'spanHigh', 'spanLow', 'state0', 'state1', 'state2', 'state3', 'state4', 'state5', 'state6', 'state7'];
+const cfgRecordAfterKey = ['Desc', 'IP', 'Port', 'Log', 'EU', 'IDF', 'FDF', 'SH', 'SL', 'S0', 'S1', 'S2', 'S3', 'S4',
+  'S5', 'S6', 'S7'];
 
 const errorMessage = {
   updateFailed: 'SCADA [%s] update configuration error ! Please contact the administrator.',

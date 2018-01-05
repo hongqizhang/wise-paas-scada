@@ -6,8 +6,7 @@ const Promise = require('bluebird');
 
 function _connect (conf) {
   if (!conf) {
-    console.error('[mongodb] no config !');
-    return;
+    return console.error('[mongodb] no config !');
   }
 
   let options = {
