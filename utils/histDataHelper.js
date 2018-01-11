@@ -140,7 +140,7 @@ function _getHistRawData (param) {
                 if (err) {
                   reject(err);
                 } else {
-                  let prevValue = (results && results.length > 0 && results[0].value) ? results[0].value : constant.badTagValue;
+                  let prevValue = (results && results.length > 0 && results[0].value !== undefined) ? results[0].value : constant.badTagValue;
                   for (let i = 0; i < values.length; i++) {
                     if (values[i].value === constant.badTagValue && prevValue !== constant.badTagValue) {
                       values[i].value = prevValue;
