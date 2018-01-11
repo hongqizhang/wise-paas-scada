@@ -33,7 +33,12 @@ function _ack (msg, all) {
   }
 }
 
-function _connect (uri, callback) {
+function _connect (options, callback) {
+  if (!options) {
+    return callback(new Error('[AMQP] Error ! Connection with no options !'));
+  }
+  let uri = options.uri;
+  let prefetch = options.prefetch || 1;
   amqp.connect(uri, (err, conn) => {
     if (err) {
       console.error('[AMQPConnectError] ' + err);
@@ -61,7 +66,7 @@ function _connect (uri, callback) {
       ch.bindQueue(amqpQueue.dataQ, exchangeName, amqpTopics.dataTopic);
       // ch.bindQueue(amqpQueue.notifyQ, exchangeName, amqpTopics.notifyTopic.replace(/\//g, '.'));
 
-      ch.prefetch(1);
+      ch.prefetch(prefetch);
 
       ch.consume(amqpQueue.cfgQ, (msg) => {
         let buff = msg.fields.routingKey.split('.');
