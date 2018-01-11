@@ -1,6 +1,6 @@
 {
   "name": "wise-paas-scada",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "wise-paas-scada is a utility node-module for WISE-PaaS SCADA.",
   "main": "index.js",
   "scripts": {
@@ -19,6 +19,6 @@
     "influx": "5.0.7",
     "merge": "1.2.0",
     "mongoose": "4.12.0",
-    "mqtt": "2.13.0"
+    "mqtt": "2.15.0"
   }
 }
