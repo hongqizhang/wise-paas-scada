@@ -16,8 +16,20 @@ function _connect (conf) {
     connectTimeoutMS: 30000,
     socketTimeoutMS: 30000
   };
-  mongoose.connect(util.format('mongodb://%s:%s@%s:%d/%s',
-    conf.username, conf.password, conf.hostname, conf.port, conf.database), options);
+
+  let addrs = [];
+  addrs.push(util.format('%s:%d', conf.hostname, conf.port));
+  if (conf.replicaSet) {
+    if (Array.isArray(conf.replicaSet)) {
+      for (let i = 0; i < conf.replicaSet.length; i++) {
+        addrs.push(util.format('%s:%d', conf.replicaSet[i].host, conf.replicaSet[i].port));
+      }
+    } else if (typeof conf.replicaSet === 'object') {
+      addrs.push(util.format('%s:%d', conf.replicaSet.host, conf.replicaSet.port));
+    }
+  }
+  mongoose.connect(util.format('mongodb://%s:%s@%s/%s',
+    conf.username, conf.password, addrs.join(','), conf.database), options);
 
   mongoose.Promise = Promise;
   let db = mongoose.connection;
