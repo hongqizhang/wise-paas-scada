@@ -33,11 +33,11 @@ function _getHistRawData (param) {
         }
       }
       let sql = `
-      SELECT * FROM ${influxdb.escape.measurement(MeasurementHistRawData)}
+      SELECT time, val, vtal FROM ${influxdb.escape.measurement(MeasurementHistRawData)}
       WHERE scadaId = ${influxdb.escape.stringLit(scadaId)} AND
       deviceId = ${influxdb.escape.stringLit(deviceId)} AND
       tagName = ${influxdb.escape.stringLit(tagName)} AND
-      time >= '${startTs.toISOString()}' AND time < '${endTs.toISOString()}'
+      time >= '${startTs.toISOString()}' AND time <= '${endTs.toISOString()}'
       ORDER BY time ${(orderby === 1) ? 'ASC' : 'DESC'}
       LIMIT ${limit.toString()}`;
 
@@ -73,7 +73,7 @@ function _getHistRawData (param) {
             }
             if (values.length > 0 && values[0].value === constant.badTagValue) {
               sql = `
-              SELECT * FROM ${influxdb.escape.measurement(MeasurementHistRawData)}
+              SELECT time, val, vtal FROM ${influxdb.escape.measurement(MeasurementHistRawData)}
               WHERE scadaId = ${influxdb.escape.stringLit(scadaId)} AND
               deviceId = ${influxdb.escape.stringLit(deviceId)} AND
               tagName = ${influxdb.escape.stringLit(tagName)} AND
