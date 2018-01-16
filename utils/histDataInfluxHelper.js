@@ -5,7 +5,7 @@ const Promise = require('bluebird');
 const constant = require('../common/const');
 const influxdb = require('../db/influxdb');
 
-const MeasurementHistRawData = 'hist_raw_data';
+const MeasurementHistRawDataPrefix = 'hist_raw_data';
 
 function _getHistRawData (param) {
   return new Promise((resolve, reject) => {
@@ -32,11 +32,19 @@ function _getHistRawData (param) {
           return reject(new Error('The format of end time must be Date !'));
         }
       }
-      let sql = `
+      /* let sql = `
       SELECT time, val, vtal FROM ${influxdb.escape.measurement(MeasurementHistRawData)}
       WHERE scadaId = ${influxdb.escape.stringLit(scadaId)} AND
       deviceId = ${influxdb.escape.stringLit(deviceId)} AND
       tagName = ${influxdb.escape.stringLit(tagName)} AND
+      time >= '${startTs.toISOString()}' AND time <= '${endTs.toISOString()}'
+      ORDER BY time ${(orderby === 1) ? 'ASC' : 'DESC'}
+      LIMIT ${limit.toString()}`; */
+      let id = util.format('%s/%s', deviceId, tagName);
+      let measurement = util.format('%s_%s', MeasurementHistRawDataPrefix, scadaId);
+      let sql = `
+      SELECT time, val, vtal FROM "${influxdb.escape.measurement(measurement)}"
+      WHERE id = ${influxdb.escape.stringLit(id)} AND
       time >= '${startTs.toISOString()}' AND time <= '${endTs.toISOString()}'
       ORDER BY time ${(orderby === 1) ? 'ASC' : 'DESC'}
       LIMIT ${limit.toString()}`;
@@ -73,10 +81,8 @@ function _getHistRawData (param) {
             }
             if (values.length > 0 && values[0].value === constant.badTagValue) {
               sql = `
-              SELECT time, val, vtal FROM ${influxdb.escape.measurement(MeasurementHistRawData)}
-              WHERE scadaId = ${influxdb.escape.stringLit(scadaId)} AND
-              deviceId = ${influxdb.escape.stringLit(deviceId)} AND
-              tagName = ${influxdb.escape.stringLit(tagName)} AND
+              SELECT time, val, vtal FROM "${influxdb.escape.measurement(measurement)}"
+              WHERE id = ${influxdb.escape.stringLit(id)} AND
               time < '${startTs.toISOString()}'
               LIMIT 1`;
               influxdb.query(sql)
@@ -137,8 +143,9 @@ function _insertHistRawData (params) {
         for (let j = 0; j < param.value.length; j++) {
           val = param.value[j];
           point = {
-            measurement: 'hist_raw_data',
-            tags: { scadaId: param.scadaId, deviceId: param.deviceId, tagName: param.tagName + '.' + j.toString() },
+            measurement: util.format('%s_%s', MeasurementHistRawDataPrefix, param.scadaId),
+            // tags: { scadaId: param.scadaId, deviceId: param.deviceId, tagName: param.tagName + '.' + j.toString() },
+            tags: { id: util.format('%s/%s', param.deviceId, param.tagName + '.' + j.toString()) },
             fields: {},
             timestamp: params.ts
           };
@@ -152,8 +159,9 @@ function _insertHistRawData (params) {
       } else {
         val = param.value;
         point = {
-          measurement: 'hist_raw_data',
-          tags: { scadaId: param.scadaId, deviceId: param.deviceId, tagName: param.tagName },
+          measurement: util.format('%s_%s', MeasurementHistRawDataPrefix, param.scadaId),
+          // tags: { scadaId: param.scadaId, deviceId: param.deviceId, tagName: param.tagName },
+          tags: { id: util.format('%s/%s', param.deviceId, param.tagName) },
           fields: {},
           timestamp: params.ts
         };

@@ -23,10 +23,17 @@ function _connect (conf) {
           val: Influx.FieldType.FLOAT
         },
         tags: [
-          'scadaId', 'deviceId', 'tagName'
+          'id'
         ]
       }
     ]
+  });
+
+  _influxdb.createDatabase(conf.database)
+  .then((result) => {
+    // console.log('[influxdb] Create database [%s] success !' + conf.database);
+  }).catch((err) => {
+    console.error('[influxdb] ' + err);
   });
 }
 
