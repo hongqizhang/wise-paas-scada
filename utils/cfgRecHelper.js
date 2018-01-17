@@ -172,9 +172,9 @@ function _syncDeviceConfig (ids, callback) {
         }
 
         if (result && Object.keys(result[scadaId]).length > 0) {
-          cmdObj = { d: { Cmd: 'WC', Action: 3, Scada: result }, ts: new Date() };
-        } else {
           cmdObj = { d: { Cmd: 'WC', Action: 2, Scada: result }, ts: new Date() };
+        } else {
+          cmdObj = { d: { Cmd: 'WC', Action: 3, Scada: result }, ts: new Date() };
         }
 
         let msg = JSON.stringify(cmdObj, __replacer);
