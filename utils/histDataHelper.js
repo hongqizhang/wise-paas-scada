@@ -178,7 +178,10 @@ function _getHistRawData (param) {
 function _insertHistRawData (params) {
   return new Promise((resolve, reject) => {
     try {
-      var bulk = HistRawData.collection.initializeUnorderedBulkOp();
+      let bulk = HistRawData.collection.initializeUnorderedBulkOp();
+      if (!bulk) {
+        reject(new Error('[mongodb] initial bulk error !'));
+      }
       let count = params.length;
       for (let i = 0; i < count; i++) {
         let param = params[i];
