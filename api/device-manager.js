@@ -8,10 +8,12 @@ const DeviceStatus = require('../models/device-status.js');
 const wamqtt = require('../communication/wamqtt.js');
 
 function _init (mongoConf, mqttConf) {
-  if (mongodb && mongodb.isConnected() === false && mongodb.isConnecting() === false) {
-    mongodb.connect(mongoConf);
+  if (mongoConf) {
+    if (mongodb && mongodb.isConnected() === false && mongodb.isConnecting() === false) {
+      mongodb.connect(mongoConf);
+    }
   }
-  if (wamqtt) {
+  if (mqttConf) {
     if (wamqtt && wamqtt.isConnected() === false && wamqtt.isConnecting() === false) {
       wamqtt.connect(mqttConf);
       wamqtt.events.on('connect', () => {
