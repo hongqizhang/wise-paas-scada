@@ -18,7 +18,7 @@ function _connect (conf) {
   };
 
   let addrs = [];
-  addrs.push(util.format('%s:%d', conf.hostname, conf.port));
+  addrs.push(util.format('%s:%d', conf.host, conf.port));
   if (conf.replicaSet) {
     if (Array.isArray(conf.replicaSet)) {
       for (let i = 0; i < conf.replicaSet.length; i++) {
@@ -58,7 +58,7 @@ function _disconnect () {
 function _reconnect (conf, options) {
   console.log('[mongodb] Disconnected ! Try to connect...');
   mongoose.connect(util.format('mongodb://%s:%s@%s:%d/%s',
-    conf.username, conf.password, conf.hostname, conf.port, conf.database), options)
+    conf.username, conf.password, conf.host, conf.port, conf.database), options)
   .catch((err) => {
     console.error(err.message);
   });

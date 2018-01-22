@@ -17,8 +17,8 @@ let mqttConf = {
   password: ''
 };
 
-let conf = {
-  hostname: '127.0.0.1',
+let mongoConf = {
+  host: '127.0.0.1',
   port: 27017,
   username: 'username',
   password: 'password',
@@ -34,13 +34,13 @@ let influxConf = {
 };
 
 datastore.init({
-  mongoConf: conf,
+  mongoConf: mongoConf,
   mqttConf: mqttConf,
   influxConf: influxConf,
   histDBType: constant.databaseType.influxdb
 });
-scadaManager.init(conf, mqttConf);
-deviceManager.init(conf, mqttConf);
+scadaManager.init(mongoConf, mqttConf);
+deviceManager.init(mongoConf, mqttConf);
 
 let dsParams1 = {
   scadaId: 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce',
@@ -96,7 +96,7 @@ let histQueryParam1 = {
   }
 }); */
 
-console.time('getHistRawData');
+/* console.time('getHistRawData');
 datastore.getHistDataLog(histQueryParam, function (err, result) {
   if (err) {
     console.error(err);
@@ -105,7 +105,7 @@ datastore.getHistDataLog(histQueryParam, function (err, result) {
     console.log('getHistRawData: ');
     console.log(JSON.stringify(result));
   }
-});
+}); */
 
 /* console.time('getHistDataLog');
 datastore.getHistDataLog(histQueryParam1, function (err, result) {
@@ -258,7 +258,7 @@ let p2 = {
   }
 }); */
 
-deviceManager.upsertDeviceStatus(dsParams1.scadaId, dsParams1.deviceId, { status: true }, (err, result) => {
+/* deviceManager.upsertDeviceStatus(dsParams1.scadaId, dsParams1.deviceId, { status: true }, (err, result) => {
   if (err) {
     console.error(err);
   } else {
@@ -270,14 +270,6 @@ deviceManager.upsertDeviceStatus(dsParams1.scadaId, dsParams1.deviceId, { status
         console.log(result);
       }
     });
-  }
-});
-
-scadaManager.upsertScadaStatus(dsParams1.scadaId, {}, function (err, result) {
-  if (err) {
-    console.error(err);
-  } else {
-
   }
 });
 
