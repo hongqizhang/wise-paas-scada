@@ -5,10 +5,9 @@ const mongoose = require('mongoose');
 const Promise = require('bluebird');
 
 function _connect (conf) {
-  if (!conf) {
+  if (!conf || Object.keys(conf).length === 0) {
     return console.error('[mongodb] no config !');
   }
-
   let options = {
     useMongoClient: true,
     autoReconnect: false,

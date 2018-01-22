@@ -5,7 +5,7 @@ const Influx = require('influx');
 let _influxdb = null;
 
 function _connect (conf) {
-  if (!conf) {
+  if (!conf || Object.keys(conf).length === 0) {
     return console.error('[influxdb] no config !');
   }
   _influxdb = new Influx.InfluxDB({
@@ -27,13 +27,6 @@ function _connect (conf) {
         ]
       }
     ]
-  });
-
-  _influxdb.createDatabase(conf.database)
-  .then((result) => {
-    // console.log('[influxdb] Create database [%s] success !' + conf.database);
-  }).catch((err) => {
-    console.error('[influxdb] ' + err);
   });
 }
 

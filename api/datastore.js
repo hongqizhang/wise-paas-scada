@@ -13,42 +13,46 @@ const scadaCmdHelper = require('../utils/scadaCmdHelper');
 let histDataHelper = null;
 
 function _init (options) {
-  if (!options) {
-    return;
-  }
+  try {
+    if (!options) {
+      return;
+    }
 
-  let mongoConf = options.mongoConf;
-  let mqttConf = options.mqttConf;
-  let influxConf = options.influxConf;
-  let histDBType = options.histDBType;
+    let mongoConf = options.mongoConf;
+    let mqttConf = options.mqttConf;
+    let influxConf = options.influxConf;
+    let histDBType = options.histDBType;
 
-  histDataHelper = histDataFactory.createHistDataHelper(histDBType);
+    histDataHelper = histDataFactory.createHistDataHelper(histDBType);
 
-  if (mongoConf && mongodb.isConnected() === false && mongodb.isConnecting() === false) {
-    mongodb.connect(mongoConf);
-  }
+    if (mongoConf && mongodb.isConnected() === false && mongodb.isConnecting() === false) {
+      mongodb.connect(mongoConf);
+    }
 
-  if (influxConf) {
-    influxdb.connect(influxConf);
-  }
+    if (influxConf) {
+      influxdb.connect(influxConf);
+    }
 
-  if (mqttConf && wamqtt.isConnected() === false && wamqtt.isConnecting() === false) {
-    wamqtt.connect(mqttConf);
-    wamqtt.events.on('connect', () => {
-      console.log('[wamqtt] Connect success !');
-    });
-    wamqtt.events.on('close', () => {
-      console.log('[wamqtt] connection close...');
-    });
-    wamqtt.events.on('offline', () => {
-      console.log('[wamqtt] Connect offline !');
-    });
-    wamqtt.events.on('error', (error) => {
-      console.error('[wamqtt] something is wrong ! ' + error);
-    });
-    wamqtt.events.on('reconnect', () => {
-      console.log('[wamqtt] try to reconnect...');
-    });
+    if (mqttConf && wamqtt.isConnected() === false && wamqtt.isConnecting() === false) {
+      wamqtt.connect(mqttConf);
+      wamqtt.events.on('connect', () => {
+        console.log('[wamqtt] Connect success !');
+      });
+      wamqtt.events.on('close', () => {
+        console.log('[wamqtt] connection close...');
+      });
+      wamqtt.events.on('offline', () => {
+        console.log('[wamqtt] Connect offline !');
+      });
+      wamqtt.events.on('error', (error) => {
+        console.error('[wamqtt] something is wrong ! ' + error);
+      });
+      wamqtt.events.on('reconnect', () => {
+        console.log('[wamqtt] try to reconnect...');
+      });
+    }
+  } catch (err) {
+    console.error(err);
   }
 }
 
