@@ -40,7 +40,7 @@ You have to specify the following options, for example:
 
 ```js
 let mongodbConf = {
-  hostname: '127.0.0.1',
+  host: '127.0.0.1',
   port: 27017,
   username: 'admin',
   password: '1234',
