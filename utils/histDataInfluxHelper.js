@@ -5,7 +5,7 @@ const Promise = require('bluebird');
 const constant = require('../common/const');
 const influxdb = require('../db/influxdb');
 
-const MeasurementHistRawDataPrefix = 'hist_raw_data';
+const MeasurementHistRawDataPrefix = 'HistRawData';
 
 function _getHistRawData (param) {
   return new Promise((resolve, reject) => {
@@ -40,8 +40,8 @@ function _getHistRawData (param) {
       time >= '${startTs.toISOString()}' AND time <= '${endTs.toISOString()}'
       ORDER BY time ${(orderby === 1) ? 'ASC' : 'DESC'}
       LIMIT ${limit.toString()}`; */
-      let id = util.format('%s/%s', deviceId, tagName);
-      let measurement = util.format('%s_%s', MeasurementHistRawDataPrefix, scadaId);
+      let id = tagName;
+      let measurement = util.format('%s_%s_%s', MeasurementHistRawDataPrefix, scadaId, deviceId);
       let sql = `
       SELECT time, val, vtal FROM "${influxdb.escape.measurement(measurement)}"
       WHERE id = ${influxdb.escape.stringLit(id)} AND
@@ -84,6 +84,7 @@ function _getHistRawData (param) {
               SELECT time, val, vtal FROM "${influxdb.escape.measurement(measurement)}"
               WHERE id = ${influxdb.escape.stringLit(id)} AND
               time < '${startTs.toISOString()}'
+              ORDER BY time DESC
               LIMIT 1`;
               influxdb.query(sql)
                 .then((results) => {
@@ -143,9 +144,9 @@ function _insertHistRawData (params) {
         for (let j = 0; j < param.value.length; j++) {
           val = param.value[j];
           point = {
-            measurement: util.format('%s_%s', MeasurementHistRawDataPrefix, param.scadaId),
+            measurement: util.format('%s_%s_%s', MeasurementHistRawDataPrefix, param.scadaId, param.deviceId),
             // tags: { scadaId: param.scadaId, deviceId: param.deviceId, tagName: param.tagName + '.' + j.toString() },
-            tags: { id: util.format('%s/%s', param.deviceId, param.tagName + '.' + j.toString()) },
+            tags: { id: param.tagName + '.' + j.toString() },
             fields: {},
             timestamp: params.ts
           };
@@ -159,9 +160,9 @@ function _insertHistRawData (params) {
       } else {
         val = param.value;
         point = {
-          measurement: util.format('%s_%s', MeasurementHistRawDataPrefix, param.scadaId),
+          measurement: util.format('%s_%s_%s', MeasurementHistRawDataPrefix, param.scadaId, param.deviceId),
           // tags: { scadaId: param.scadaId, deviceId: param.deviceId, tagName: param.tagName },
-          tags: { id: util.format('%s/%s', param.deviceId, param.tagName) },
+          tags: { id: param.tagName },
           fields: {},
           timestamp: params.ts
         };
