@@ -1,6 +1,6 @@
 {
   "name": "wise-paas-scada",
-  "version": "1.5.7",
+  "version": "1.5.8",
   "description": "wise-paas-scada is a utility node-module for WISE-PaaS SCADA.",
   "main": "index.js",
   "scripts": {
