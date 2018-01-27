@@ -8,8 +8,6 @@ const DeviceStatus = require('../models/device-status.js');
 const wamqtt = require('../communication/wamqtt.js');
 const cfgRecHelper = require('../utils/cfgRecHelper.js');
 
-const defaultHbtFreq = 5;
-
 function __updateModifiedStatus (id, modified, callback) {
   callback = callback || function () { };
   return new Promise((resolve, reject) => {
@@ -24,6 +22,27 @@ function __updateModifiedStatus (id, modified, callback) {
       }
       resolve(response);
       callback(null, response);
+    });
+  });
+}
+
+function __updateDeviceStatus (param) {
+  return new Promise((resolve, reject) => {
+    DeviceStatus.update({ _id: param.scadaId }, {
+      _id: param.scadaId,
+      status: param.status || false,
+      modified: param.modified || false,
+      ts: param.ts || new Date(),
+      devices: []
+    }, { upsert: true }, (err, result) => {
+      if (err) {
+        reject(err);
+      }
+      let response = { ok: false };
+      if (result && result.n) {
+        response.ok = (result.n > 0);
+      }
+      resolve(response);
     });
   });
 }
@@ -125,28 +144,28 @@ function _updateScadaStatus (id, param, callback) {
   });
 }
 
-function _upsertScadaStatus (id, params, callback) {
+function _upsertScadaStatus (param, callback) {
   callback = callback || function () { };
   return new Promise((resolve, reject) => {
-    DeviceStatus.update({ _id: id }, {
-      _id: id,
-      status: params.status || false,
-      freq: params.freq || defaultHbtFreq,
-      modified: params.modified || false,
-      ts: params.ts || new Date(),
-      devices: []
-    }, { upsert: true }, (err, result) => {
-      if (err) {
+    let promises = [];
+    let params = [];
+    if (Array.isArray(param)) {
+      params = param;
+    } else {
+      params = [param];
+    }
+    for (let i = 0; i < params.length; i++) {
+      promises.push(__updateDeviceStatus(params[i]));
+    }
+    Promise.all(promises)
+      .then((results) => {
+        resolve(results);
+        callback(null, results);
+      })
+      .catch((err) => {
         reject(err);
-        return callback(err);
-      }
-      let response = { ok: false };
-      if (result && result.n) {
-        response.ok = (result.n > 0);
-      }
-      resolve(response);
-      callback(null, response);
-    });
+        callback(err);
+      });
   });
 }
 
