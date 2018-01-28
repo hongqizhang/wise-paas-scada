@@ -14,16 +14,22 @@ let connection = null;
 let channel = null;
 
 function _publish (topic, message) {
-  if (channel) {
-    let routingKey = topic.replace(/\//g, '.');
-    let content = JSON.stringify(message);
-    let buffer = Buffer.alloc(content.length, content);
-    channel.publish(exchangeName, routingKey, buffer, { persistent: false }, (err, result) => {
-      if (err) {
-        console.error('[AMQP] publish', err);
-      }
-    });
-  }
+  return new Promise((resolve, reject) => {
+    if (channel) {
+      let routingKey = topic.replace(/\//g, '.');
+      let content = JSON.stringify(message);
+      let buffer = Buffer.alloc(content.length, content);
+      channel.publish(exchangeName, routingKey, buffer, { persistent: false }, (err, result) => {
+        if (err) {
+          console.error('[AMQP] Publish error ! ' + err);
+          reject(err);
+        }
+        resolve();
+      });
+    } else {
+      reject(new Error('[AMQP] No channel !'));
+    }
+  });
 }
 
 function _ack (msg, all) {
