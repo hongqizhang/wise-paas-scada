@@ -19,13 +19,8 @@ function _publish (topic, message) {
       let routingKey = topic.replace(/\//g, '.');
       let content = JSON.stringify(message);
       let buffer = Buffer.alloc(content.length, content);
-      channel.publish(exchangeName, routingKey, buffer, { persistent: false }, (err, result) => {
-        if (err) {
-          console.error('[AMQP] Publish error ! ' + err);
-          reject(err);
-        }
-        resolve();
-      });
+      channel.publish(exchangeName, routingKey, buffer, { persistent: false });
+      resolve();
     } else {
       reject(new Error('[AMQP] No channel !'));
     }
