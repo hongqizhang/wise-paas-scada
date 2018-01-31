@@ -47,7 +47,7 @@ function _isConnecting () {
 function _connect (conf) {
   try {
     connectStatus = connStatus.Connecting;
-    let clientId = 'scada_' + Math.random().toString(16).substr(2, 8);
+    let clientId = conf.clientId || 'scada_' + Math.random().toString(16).substr(2, 8);
     var tcpOptions = {
       port: conf.port || 1883,
       clean: true,
