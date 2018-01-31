@@ -32,9 +32,9 @@ function _getHistRawData (param) {
           condition[key] = param.condition[key];
         }
       }
-      condition.scadaId = scadaId;
-      // condition.deviceId = deviceId;
-      condition.tagName = tagName;
+      condition.s = scadaId;
+      condition.d = deviceId;
+      condition.t = tagName;
       condition.ts = { '$lte': new Date() };
       if (startTs) {
         if (startTs instanceof Date === false) {
@@ -66,7 +66,7 @@ function _getHistRawData (param) {
           dbDataType = '$sum';
           break;
       }
-      if (intervalType === constant.intervalType.second) dbDataType = '$value';
+      if (intervalType === constant.intervalType.second) dbDataType = '$val';
 
       pipeline.push({ $match: condition });
       pipeline.push({ $sort: { ts: orderby } });
@@ -75,7 +75,7 @@ function _getHistRawData (param) {
       }
       pipeline.push({
         $group: {
-          _id: { scadaId: '$scadaId', tagName: '$tagName' },
+          _id: { scadaId: '$s', deviceId: '$d', tagName: '$t' },
           values: { $push: { value: dbDataType, ts: '$ts' } }
         }
       });
@@ -135,12 +135,12 @@ function _getHistRawData (param) {
             }
             // console.log('tick_values = ', values);
             if (values.length > 0 && values[0].value === constant.badTagValue) {
-              collPointer.find({ scadaId: scadaId, tagName: tagName, ts: { '$lt': startTs } }).sort({ ts: -1 })
-              .hint({ scadaId: 1, tagName: 1, ts: 1 }).limit(1).exec((err, results) => {
+              collPointer.find({ s: scadaId, d: deviceId, t: tagName, ts: { '$lt': startTs } }).sort({ ts: -1 })
+              .hint({ s: 1, d: 1, t: 1, ts: 1 }).limit(1).exec((err, results) => {
                 if (err) {
                   reject(err);
                 } else {
-                  let prevValue = (results && results.length > 0 && results[0].value !== undefined) ? results[0].value : constant.badTagValue;
+                  let prevValue = (results && results.length > 0 && results[0].val !== undefined) ? results[0].val : constant.badTagValue;
                   for (let i = 0; i < values.length; i++) {
                     if (values[i].value === constant.badTagValue && prevValue !== constant.badTagValue) {
                       values[i].value = prevValue;
@@ -182,6 +182,7 @@ function _insertHistRawData (params) {
       if (!bulk) {
         reject(new Error('[mongodb] initial bulk error !'));
       }
+      let document = {};
       let count = params.length;
       for (let i = 0; i < count; i++) {
         let param = params[i];
@@ -189,21 +190,24 @@ function _insertHistRawData (params) {
           continue;
         } else if (param.value === constant.badTagValue) {
           continue;
-        } else if (typeof param.value === 'object') {
+        } else if (typeof param.value === 'object') {   // array tag
           for (let key in param.value) {
             if (param.value[key] === constant.badTagValue) {
               delete param.value[key];
             }
           }
         }
-        if (param.hasOwnProperty('deviceId')) {
-          delete param.deviceId;
-        }
         if (typeof param.ts === 'string') {
           param.ts = new Date(param.ts);
         }
-        param.opTS = new Date();
-        bulk.insert(param);
+        document = {
+          s: param.scadaId,
+          d: param.deviceId,
+          t: param.tagName,
+          val: param.value,
+          ts: param.ts
+        };
+        bulk.insert(document);
       }
       if (bulk.length === 0) {
         return resolve();

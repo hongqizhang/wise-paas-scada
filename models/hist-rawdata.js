@@ -7,20 +7,20 @@ let histDataSchema = new Schema({
   _id: {
     type: Schema.Types.ObjectId
   },
-  scadaId: String,
-  tagName: String,
-  value: Object,
+  s: String,
+  d: String,
+  t: String,
+  val: Object,
   ts: {
     type: Date,
     default: Date.now
-  },
+  }/*,
   opTS: {
     type: Date,
     default: Date.now
-  }
+  } */
 }, { collection: 'scada_HistRawData', versionKey: false });
-histDataSchema.index({ scadaId: 1, tagName: 1, ts: 1 }, { unique: true });
-histDataSchema.index({ scadaId: 1, tagName: 1, opTS: 1 }, { unique: false });
+histDataSchema.index({ s: 1, d: 1, t: 1, ts: 1 }, { unique: true });
 histDataSchema.index({ ts: 1 }, { unique: false });
 
 /* let subSchema = new Schema({
