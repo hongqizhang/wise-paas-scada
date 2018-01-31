@@ -35,6 +35,9 @@ function __mergeModifiedConfigRecord (id, callback) {
       if (err) {
         return callback(err);
       }
+      if (!result) {
+        callback();
+      }
       let mergedObj = {};
       if (result && result.records) {
         for (let i = 0; i < result.records.length; i++) {
@@ -139,12 +142,16 @@ function _syncDeviceConfig (ids, callback) {
     });
     for (let i = 0; i < ids.length; i++) {
       let scadaId = ids[i];
-      let result = { id: ids[i], ok: false, message: util.format(errorMessage.noRecvAck, ids[i]) };
+      let result = { id: ids[i], ok: false, message: '' };
       results.push(result);
 
       __mergeModifiedConfigRecord(ids[i], (err, result) => {
         if (err) {
           return console.error(err);
+        }
+        if (!result) {
+          results[i].ok = true;
+          return;
         }
         let cmdObj = {};
         for (let scadaId in result) {
@@ -171,7 +178,7 @@ function _syncDeviceConfig (ids, callback) {
           }
         }
 
-        if (result && Object.keys(result[scadaId]).length > 0) {
+        if (result && Object.keys(result).length > 0 && Object.keys(result[scadaId]).length > 0) {
           cmdObj = { d: { Cmd: 'WC', Action: 2, Scada: result }, ts: new Date() };
         } else {
           cmdObj = { d: { Cmd: 'WC', Action: 3, Scada: result }, ts: new Date() };
