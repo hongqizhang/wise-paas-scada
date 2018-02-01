@@ -209,6 +209,8 @@ function _syncDeviceConfig (ids, callback) {
       for (let i = 0; i < results.length; i++) {
         if (results[i].ok === true) {
           delIds.push(results[i].id);
+        } else {
+          results[i].message = util.format(errorMessage.updateFailed, results[i].id);
         }
       }
         // delete all records
