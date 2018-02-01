@@ -66,7 +66,7 @@ function _getHistRawData (param) {
           dbDataType = '$sum';
           break;
       }
-      if (intervalType === constant.intervalType.second) dbDataType = '$val';
+      if (intervalType === constant.intervalType.second) dbDataType = '$v';
 
       pipeline.push({ $match: condition });
       pipeline.push({ $sort: { ts: orderby } });
@@ -140,7 +140,7 @@ function _getHistRawData (param) {
                 if (err) {
                   reject(err);
                 } else {
-                  let prevValue = (results && results.length > 0 && results[0].val !== undefined) ? results[0].val : constant.badTagValue;
+                  let prevValue = (results && results.length > 0 && results[0].v !== undefined) ? results[0].v : constant.badTagValue;
                   for (let i = 0; i < values.length; i++) {
                     if (values[i].value === constant.badTagValue && prevValue !== constant.badTagValue) {
                       values[i].value = prevValue;
@@ -204,7 +204,7 @@ function _insertHistRawData (params) {
           s: param.scadaId,
           d: param.deviceId,
           t: param.tagName,
-          val: param.value,
+          v: param.value,
           ts: param.ts
         };
         bulk.insert(document);

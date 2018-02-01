@@ -10,7 +10,7 @@ let histDataSchema = new Schema({
   s: String,
   d: String,
   t: String,
-  val: Object,
+  v: Object,
   ts: {
     type: Date,
     default: Date.now
@@ -21,6 +21,7 @@ let histDataSchema = new Schema({
   } */
 }, { collection: 'scada_HistRawData', versionKey: false });
 histDataSchema.index({ s: 1, d: 1, t: 1, ts: 1 }, { unique: true });
+histDataSchema.index({ s: 1, d: 1, t: 1, ts: -1 }, { unique: true });
 histDataSchema.index({ ts: 1 }, { unique: false });
 
 /* let subSchema = new Schema({
