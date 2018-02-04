@@ -18,17 +18,18 @@ function _connect (conf) {
 
   let addrs = [];
   addrs.push(util.format('%s:%d', conf.host, conf.port));
-  if (conf.replicaSet) {
-    if (Array.isArray(conf.replicaSet)) {
-      for (let i = 0; i < conf.replicaSet.length; i++) {
-        addrs.push(util.format('%s:%d', conf.replicaSet[i].host, conf.replicaSet[i].port));
+  let replicaSet = '';
+  if (conf.replica) {
+    replicaSet = '?replicaSet=' + conf.replica.name;
+    if (Array.isArray(conf.replica.set)) {
+      for (let i = 0; i < conf.replica.set.length; i++) {
+        addrs.push(util.format('%s:%d', conf.replica.set[i].host, conf.replica.set[i].port));
       }
-    } else if (typeof conf.replicaSet === 'object') {
-      addrs.push(util.format('%s:%d', conf.replicaSet.host, conf.replicaSet.port));
     }
   }
-  mongoose.connect(util.format('mongodb://%s:%s@%s/%s',
-    conf.username, conf.password, addrs.join(','), conf.database), options);
+
+  mongoose.connect(util.format('mongodb://%s:%s@%s/%s%s',
+    conf.username, conf.password, addrs.join(','), conf.database, replicaSet), options);
 
   mongoose.Promise = Promise;
   let db = mongoose.connection;
