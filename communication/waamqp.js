@@ -50,7 +50,7 @@ function _connect (options, callback) {
     });
     conn.on('close', () => {
       console.error('[AMQP] Connection close ! Reconnecting....');
-      setTimeout(() => { _connect(uri, callback); }, 1000);
+      setTimeout(() => { _connect(options, callback); }, 1000);
     });
     connection = conn;
     connection.createChannel((err, ch) => {
