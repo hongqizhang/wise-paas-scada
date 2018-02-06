@@ -43,6 +43,7 @@ function _connect (options, callback) {
   amqp.connect(uri, (err, conn) => {
     if (err) {
       console.error('[AMQPConnectError] ' + err);
+      setTimeout(() => { _connect(options, callback); }, 1000);
       return callback(err);
     }
     conn.on('error', (error) => {
