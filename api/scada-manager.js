@@ -47,31 +47,42 @@ function __updateDeviceStatus (param) {
   });
 }
 
-function _init (mongoConf, mqttConf) {
-  if (mongoConf) {
-    if (mongodb && mongodb.isConnected() === false && mongodb.isConnecting() === false) {
-      mongodb.connect(mongoConf);
+function _init (options) {
+  try {
+    if (!options) {
+      return;
     }
-  }
-  if (mqttConf) {
-    if (wamqtt && wamqtt.isConnected() === false && wamqtt.isConnecting() === false) {
-      wamqtt.connect(mqttConf);
-      wamqtt.events.on('connect', () => {
-        console.log('[wamqtt] Connect success !');
-      });
-      wamqtt.events.on('close', () => {
-        console.log('[wamqtt] connection close...');
-      });
-      wamqtt.events.on('offline', () => {
-        console.log('[wamqtt] Connect offline !');
-      });
-      wamqtt.events.on('error', (error) => {
-        console.error('[wamqtt] something is wrong ! ' + error);
-      });
-      wamqtt.events.on('reconnect', () => {
-        console.log('[wamqtt] try to reconnect...');
-      });
+
+    let mongoConf = options.mongoConf;
+    let mqttConf = options.mqttConf;
+
+    if (mongoConf) {
+      if (mongodb && mongodb.isConnected() === false && mongodb.isConnecting() === false) {
+        mongodb.connect(mongoConf);
+      }
     }
+    if (mqttConf) {
+      if (wamqtt && wamqtt.isConnected() === false && wamqtt.isConnecting() === false) {
+        wamqtt.connect(mqttConf);
+        wamqtt.events.on('connect', () => {
+          console.log('[wamqtt] Connect success !');
+        });
+        wamqtt.events.on('close', () => {
+          console.log('[wamqtt] connection close...');
+        });
+        wamqtt.events.on('offline', () => {
+          console.log('[wamqtt] Connect offline !');
+        });
+        wamqtt.events.on('error', (error) => {
+          console.error('[wamqtt] something is wrong ! ' + error);
+        });
+        wamqtt.events.on('reconnect', () => {
+          console.log('[wamqtt] try to reconnect...');
+        });
+      }
+    }
+  } catch (err) {
+    console.error(err);
   }
 }
 
