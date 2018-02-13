@@ -21,6 +21,7 @@ let histMinDataSchema = new Schema({
     default: Date.now
   }
 }, { collection: 'scada_HistMinData', versionKey: false });
+
 histMinDataSchema.index({ scadaId: 1, tagName: 1, ts: 1 }, { unique: true });
 mongoose.model('HistMinData', histMinDataSchema);
 module.exports = mongoose.model('HistMinData');

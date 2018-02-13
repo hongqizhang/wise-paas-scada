@@ -21,7 +21,7 @@ let histDayDataSchema = new Schema({
     default: Date.now
   }
 }, { collection: 'scada_HistDayData', versionKey: false });
+
 histDayDataSchema.index({ scadaId: 1, tagName: 1, ts: 1 }, { unique: true });
-// histDayDataSchema.index({ _id: 1 }, { unique: true });
 mongoose.model('HistDayData', histDayDataSchema);
 module.exports = mongoose.model('HistDayData');

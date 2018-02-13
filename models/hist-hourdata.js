@@ -23,6 +23,5 @@ let histHorDataSchema = new Schema({
 }, { collection: 'scada_HistHorData', versionKey: false });
 
 histHorDataSchema.index({ scadaId: 1, tagName: 1, ts: 1 }, { unique: true });
-// histHorDataSchema.index({ _id: 1 }, { unique: true });
 mongoose.model('HistHorData', histHorDataSchema);
 module.exports = mongoose.model('HistHorData');
