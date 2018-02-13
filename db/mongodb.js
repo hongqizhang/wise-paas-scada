@@ -9,27 +9,21 @@ function _connect (conf) {
     return console.error('[mongodb] no config !');
   }
   let options = {
-    useMongoClient: true,
-    autoReconnect: false,
+    autoReconnect: true,
+    reconnectTries: Number.MAX_VALUE,
+    reconnectInterval: 1000,
+    bufferMaxEntries: 0,
     poolSize: 5,
     connectTimeoutMS: 30000,
     socketTimeoutMS: 30000
+    /* replicaSet: 'rs0' 預設default執會導致local測試失敗 */
   };
 
-  let addrs = [];
-  addrs.push(util.format('%s:%d', conf.host, conf.port));
-  let replicaSet = '';
-  if (conf.replica) {
-    replicaSet = '?replicaSet=' + conf.replica.name;
-    if (Array.isArray(conf.replica.set)) {
-      for (let i = 0; i < conf.replica.set.length; i++) {
-        addrs.push(util.format('%s:%d', conf.replica.set[i].host, conf.replica.set[i].port));
-      }
-    }
+  if (conf.replicaSetName) {
+    options.replicaSet = conf.replicaSetName;
   }
 
-  mongoose.connect(util.format('mongodb://%s:%s@%s/%s%s',
-    conf.username, conf.password, addrs.join(','), conf.database, replicaSet), options);
+  mongoose.connect(conf.uri, options);
 
   mongoose.Promise = Promise;
   let db = mongoose.connection;
@@ -45,9 +39,10 @@ function _connect (conf) {
     console.log('[mongodb] Connect success !');
   });
   db.on('disconnected', () => {
-    setTimeout(() => {
+    console.log('[mongodb] Disconnected !');
+    /* setTimeout(() => {
       _reconnect(conf, options);
-    }, 3000);
+    }, 3000); */
   });
 }
 
