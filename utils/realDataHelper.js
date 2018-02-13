@@ -36,7 +36,7 @@ function _getRealData (params, callback) {
 
 function _updateRealData (scadaId, params, options, callback) {
   try {
-    if (Array.isArray(params) === false) {
+    if (!Array.isArray(params)) {
       params = [params];
     }
 
@@ -68,7 +68,10 @@ function _updateRealData (scadaId, params, options, callback) {
           }
           param.value = newValue;
         }
-        doc.tags[param.tagName] = { value: param.value, ts: param.ts, opTS: new Date() };
+        let tag = doc.tags[param.tagName];
+        if (!tag || (tag && param.ts >= tag.ts)) {
+          doc.tags[param.tagName] = { value: param.value, ts: param.ts, opTS: new Date() };
+        }
       }
       RealData.collection.save(doc);
       callback();

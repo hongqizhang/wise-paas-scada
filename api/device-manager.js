@@ -44,15 +44,12 @@ function _quit () {
   }
 }
 
-function _getDeviceStatus (param, callback) {
+function _getDeviceStatus (params, callback) {
   callback = callback || function () { };
   return new Promise((resolve, reject) => {
     try {
-      let params = [];
-      if (Array.isArray(param)) {
-        params = param;
-      } else {
-        params.push(param);
+      if (!Array.isArray(params)) {
+        params = [params];
       }
       let condition = { $or: [] };
       for (let i = 0; i < params.length; i++) {

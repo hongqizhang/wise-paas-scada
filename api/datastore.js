@@ -91,15 +91,12 @@ function _quit () {
   }
 }
 
-function _getRealData (param, callback) {
+function _getRealData (params, callback) {
   callback = callback || function () { };
   return new Promise((resolve, reject) => {
     try {
-      let params = [];
-      if (Array.isArray(param)) {
-        params = param;
-      } else {
-        params.push(param);
+      if (!Array.isArray(params)) {
+        params = [params];
       }
       realDataHelper.getRealData(params, (err, result) => {
         (err) ? reject(err) : resolve(result);

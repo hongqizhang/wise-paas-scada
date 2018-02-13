@@ -26,13 +26,13 @@ function __updateModifiedStatus (id, modified, callback) {
   });
 }
 
-function __updateDeviceStatus (param) {
+function __upsertDeviceStatus (param) {
   return new Promise((resolve, reject) => {
     DeviceStatus.update({ _id: param.scadaId }, {
       _id: param.scadaId,
-      status: param.status || false,
-      modified: param.modified || false,
-      ts: param.ts || new Date(),
+      status: param.status,
+      modified: param.modified,
+      ts: param.ts,
       devices: []
     }, { upsert: true }, (err, result) => {
       if (err) {
@@ -88,20 +88,17 @@ function _getScadaStatus (ids, callback) {
   callback = callback || function () { };
   return new Promise((resolve, reject) => {
     try {
-      let sIds = [];
-      if (Array.isArray(ids)) {
-        sIds = ids;
-      } else {
-        sIds.push(ids);
+      if (!Array.isArray(ids)) {
+        ids = [ids];
       }
-      DeviceStatus.find({ _id: { $in: sIds } }, (err, results) => {
+      DeviceStatus.find({ _id: { $in: ids } }, (err, results) => {
         if (err) {
           reject(err);
           return callback(err);
         }
         let response = [];
-        for (let i = 0; i < sIds.length; i++) {
-          let id = sIds[i];
+        for (let i = 0; i < ids.length; i++) {
+          let id = ids[i];
           let result = results.find(d => d._id === id);
           let scada = {
             id: id,
@@ -124,12 +121,8 @@ function _getScadaStatus (ids, callback) {
 function _updateScadaStatus (id, param, callback) {
   callback = callback || function () { };
   return new Promise((resolve, reject) => {
-    let set = {};
-    for (let key in param) {
-      set[key] = param[key];
-    }
-    set.ts = param.ts || new Date();
-    DeviceStatus.update({ _id: id }, set, (err, result) => {
+    param.ts = param.ts || new Date();
+    DeviceStatus.update({ _id: id }, param, (err, result) => {
       if (err) {
         reject(err);
         return callback(err);
@@ -144,18 +137,15 @@ function _updateScadaStatus (id, param, callback) {
   });
 }
 
-function _upsertScadaStatus (param, callback) {
+function _upsertScadaStatus (params, callback) {
   callback = callback || function () { };
   return new Promise((resolve, reject) => {
     let promises = [];
-    let params = [];
-    if (Array.isArray(param)) {
-      params = param;
-    } else {
-      params = [param];
+    if (!Array.isArray(params)) {
+      params = [params];
     }
     for (let i = 0; i < params.length; i++) {
-      promises.push(__updateDeviceStatus(params[i]));
+      promises.push(__upsertDeviceStatus(params[i]));
     }
     Promise.all(promises)
       .then((results) => {
