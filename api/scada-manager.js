@@ -3,49 +3,13 @@
 const Promise = require('bluebird');
 
 const mongodb = require('../db/mongodb.js');
-const DeviceStatus = require('../models/device-status.js');
 // const waamqp = require('../communication/waamqp.js');
 const wamqtt = require('../communication/wamqtt.js');
 const cfgRecHelper = require('../utils/cfgRecHelper.js');
+const statusFactory = require('../factory/statusFactory');
 
-function __updateModifiedStatus (id, modified, callback) {
-  callback = callback || function () { };
-  return new Promise((resolve, reject) => {
-    DeviceStatus.update({ _id: id }, { modified: modified }, { upsert: false }, (err, result) => {
-      if (err) {
-        reject(err);
-        return callback(err);
-      }
-      let response = { ok: false };
-      if (result && result.n) {
-        response.ok = (result.n === 1);
-      }
-      resolve(response);
-      callback(null, response);
-    });
-  });
-}
-
-function __updateDeviceStatus (param) {
-  return new Promise((resolve, reject) => {
-    DeviceStatus.update({ _id: param.scadaId }, {
-      _id: param.scadaId,
-      status: param.status || false,
-      modified: param.modified || false,
-      ts: param.ts || new Date(),
-      devices: []
-    }, { upsert: true }, (err, result) => {
-      if (err) {
-        reject(err);
-      }
-      let response = { ok: false };
-      if (result && result.n) {
-        response.ok = (result.n > 0);
-      }
-      resolve(response);
-    });
-  });
-}
+let statusHelper = null;
+let constant = require('../common/const');
 
 function _init (options) {
   try {
@@ -55,6 +19,8 @@ function _init (options) {
 
     let mongoConf = options.mongoConf;
     let mqttConf = options.mqttConf;
+
+    statusHelper = statusFactory.createStatusHelper(constant.databaseType.mongodb);
 
     if (mongoConf) {
       if (mongodb && mongodb.isConnected() === false && mongodb.isConnecting() === false) {
@@ -99,31 +65,15 @@ function _getScadaStatus (ids, callback) {
   callback = callback || function () { };
   return new Promise((resolve, reject) => {
     try {
-      let sIds = [];
-      if (Array.isArray(ids)) {
-        sIds = ids;
-      } else {
-        sIds.push(ids);
+      if (!Array.isArray(ids)) {
+        ids = [ids];
       }
-      DeviceStatus.find({ _id: { $in: sIds } }, (err, results) => {
-        if (err) {
-          reject(err);
-          return callback(err);
-        }
-        let response = [];
-        for (let i = 0; i < sIds.length; i++) {
-          let id = sIds[i];
-          let result = results.find(d => d._id === id);
-          let scada = {
-            id: id,
-            status: (result && result.status !== undefined) ? result.status : false,
-            modified: (result && result.modified !== undefined) ? result.modified : false,
-            ts: (result) ? result.ts : new Date()
-          };
-          response.push(scada);
-        }
-        resolve(response);
-        callback(null, response);
+      statusHelper.getScadaStatus(ids).then((results) => {
+        resolve(results);
+        callback(null, results);
+      }).catch((err) => {
+        reject(err);
+        callback(err);
       });
     } catch (err) {
       reject(err);
@@ -135,48 +85,41 @@ function _getScadaStatus (ids, callback) {
 function _updateScadaStatus (id, param, callback) {
   callback = callback || function () { };
   return new Promise((resolve, reject) => {
-    let set = {};
-    for (let key in param) {
-      set[key] = param[key];
-    }
-    set.ts = param.ts || new Date();
-    DeviceStatus.update({ _id: id }, set, (err, result) => {
-      if (err) {
-        reject(err);
-        return callback(err);
-      }
-      let response = { ok: false };
-      if (result && result.n) {
-        response.ok = (result.n > 0);
-      }
-      resolve(response);
-      callback(null, response);
-    });
-  });
-}
-
-function _upsertScadaStatus (param, callback) {
-  callback = callback || function () { };
-  return new Promise((resolve, reject) => {
-    let promises = [];
-    let params = [];
-    if (Array.isArray(param)) {
-      params = param;
-    } else {
-      params = [param];
-    }
-    for (let i = 0; i < params.length; i++) {
-      promises.push(__updateDeviceStatus(params[i]));
-    }
-    Promise.all(promises)
-      .then((results) => {
+    try {
+      param.ts = param.ts || new Date();
+      statusHelper.updateScadaStatus(id, param).then((results) => {
         resolve(results);
         callback(null, results);
-      })
-      .catch((err) => {
+      }).catch((err) => {
         reject(err);
         callback(err);
       });
+    } catch (err) {
+      reject(err);
+      callback(err);
+    }
+  });
+}
+
+function _upsertScadaStatus (params, callback) {
+  callback = callback || function () { };
+  return new Promise((resolve, reject) => {
+    try {
+      if (!Array.isArray(params)) {
+        params = [params];
+      }
+      statusHelper.upsertScadaStatus(params)
+      .then((results) => {
+        resolve(results);
+        callback(null, results);
+      }).catch((err) => {
+        reject(err);
+        callback(err);
+      });
+    } catch (err) {
+      reject(err);
+      callback(err);
+    }
   });
 }
 
@@ -188,17 +131,12 @@ function _deleteScadaStatus (id, callback) {
       reject(err);
       return callback(err);
     }
-    DeviceStatus.remove({ _id: id }, (err, result) => {
-      if (err) {
-        reject(err);
-        return callback(err);
-      }
-      let response = { ok: false };
-      if (result && result.result && result.result.n) {
-        response.ok = (result.result.n > 0);
-      }
-      resolve(response);
-      callback(null, response);
+    statusHelper.deleteScadaStatus(id).then((result) => {
+      resolve(result);
+      callback(null, result);
+    }).catch((err) => {
+      reject(err);
+      callback(err);
     });
   });
 }
@@ -217,19 +155,17 @@ function _addModifiedConfigRecord (id, record, callback) {
         reject(err);
         return callback(err);
       } */
-
       cfgRecHelper.addModifiedConfigRecord(id, record, (err, result) => {
         if (err) {
           reject(err);
           return callback(err);
         }
-        _updateScadaStatus(id, { modified: true }, (err, result) => {
-          if (err) {
-            reject(err);
-            return callback(err);
-          }
+        statusHelper.updateScadaStatus(id, { modified: true }).then((result) => {
           resolve(result);
-          return callback(null, result);
+          callback(null, result);
+        }).catch((err) => {
+          reject(err);
+          callback(err);
         });
       });
     } catch (err) {
@@ -242,10 +178,8 @@ function _addModifiedConfigRecord (id, record, callback) {
 function _syncScadaConfig (ids, callback) {
   callback = callback || function () { };
   return new Promise((resolve, reject) => {
-    if (Array.isArray(ids) === false) {
-      let err = new Error('iput type must be array !');
-      reject(err);
-      return callback(err);
+    if (!Array.isArray(ids)) {
+      ids = [ids];
     }
     if (ids.length === 0) {
       let err = new Error('input needs at least one id !');
@@ -261,7 +195,7 @@ function _syncScadaConfig (ids, callback) {
       let promises = [];
       for (let i = 0; i < ids.length; i++) {
         if (results[i].ok === true) {
-          promises.push(__updateModifiedStatus(ids[i], false));
+          promises.push(statusHelper.updateModifiedStatus(ids[i], false));
         }
       }
       Promise.all(promises)
