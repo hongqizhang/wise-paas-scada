@@ -87,9 +87,9 @@ function _updateScadaStatus (id, param, callback) {
   return new Promise((resolve, reject) => {
     try {
       param.ts = param.ts || new Date();
-      statusHelper.updateScadaStatus(id, param).then((results) => {
-        resolve(results);
-        callback(null, results);
+      statusHelper.updateScadaStatus(id, param).then((result) => {
+        resolve(result);
+        callback(null, result);
       }).catch((err) => {
         reject(err);
         callback(err);
@@ -108,8 +108,11 @@ function _upsertScadaStatus (params, callback) {
       if (!Array.isArray(params)) {
         params = [params];
       }
-      statusHelper.upsertScadaStatus(params)
-      .then((results) => {
+      let promises = [];
+      for (let param of params) {
+        promises.push(statusHelper.upsertScadaStatus(param.scadaId, param));
+      }
+      Promise.all(promises).then((results) => {
         resolve(results);
         callback(null, results);
       }).catch((err) => {

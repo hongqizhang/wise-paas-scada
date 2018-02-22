@@ -29,9 +29,9 @@ function _getScadaStatus (ids) {
   });
 }
 
-function _getDeviceStatus(params) {
+function _getDeviceStatus (params) {
   return new Promise((resolve, reject) => {
-    try{
+    try {
       let condition = { $or: [] };
       for (let i = 0; i < params.length; i++) {
         condition['$or'].push({ _id: params[i].scadaId, 'devices.d': params[i].deviceId });
@@ -62,7 +62,7 @@ function _getDeviceStatus(params) {
         }
         resolve(response);
       });
-    } catch(err) {
+    } catch (err) {
       reject(err);
     }
   });
@@ -83,19 +83,60 @@ function _updateScadaStatus (id, param) {
   });
 }
 
-function _upsertScadaStatus (params) {
+function _upsertScadaStatus (id, param) {
   return new Promise((resolve, reject) => {
-    let promises = [];
-    for (let i = 0; i < params.length; i++) {
-      promises.push(__updateDeviceStatus(params[i]));
-    }
-    Promise.all(promises)
-      .then((results) => {
-        resolve(results);
-      })
-      .catch((err) => {
-        reject(err);
+    try {
+      DeviceStatus.update({ _id: id }, {
+        _id: id,
+        status: param.status || false,
+        modified: param.modified || false,
+        ts: param.ts || new Date(),
+        devices: []
+      }, { upsert: true }, (err, result) => {
+        if (err) {
+          reject(err);
+        }
+        let response = { ok: false };
+        if (result && result.n) {
+          response.ok = (result.n > 0);
+        }
+        resolve(response);
       });
+    } catch (err) {
+      resolve(err);
+    }
+  });
+}
+
+function _upsertDeviceStatus (scadaId, deviceId, params) {
+  return new Promise((resolve, reject) => {
+    try {
+      DeviceStatus.findOneAndUpdate({ _id: scadaId }, { $setOnInsert: { devices: [] } }, { upsert: true, new: true }, (err, doc) => {
+        if (err) {
+          reject(err);
+        }
+        let device = doc.devices.find(d => d.d === deviceId);
+        if (device) {
+          device.status = params.status || false;
+          device.ts = params.ts || new Date();
+        } else {
+          doc.devices.push({
+            d: deviceId,
+            status: params.status || false,
+            ts: params.ts || new Date()
+          });
+        }
+        DeviceStatus.collection.save(doc)
+          .then(() => {
+            let response = { ok: true };
+            resolve(response);
+          }).catch((err) => {
+            reject(err);
+          });
+      });
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
@@ -106,23 +147,17 @@ function _deleteScadaStatus (id) {
         reject(err);
       }
       let response = { ok: false };
-      if (result && result.result && result.result.n) {
-        response.ok = (result.result.n > 0);
+      if (result && result && result.n) {
+        response.ok = (result.n > 0);
       }
       resolve(response);
     });
   });
 }
 
-function __updateDeviceStatus (param) {
+function _deleteDeviceStatus (scadaId, deviceId) {
   return new Promise((resolve, reject) => {
-    DeviceStatus.update({ _id: param.scadaId }, {
-      _id: param.scadaId,
-      status: param.status || false,
-      modified: param.modified || false,
-      ts: param.ts || new Date(),
-      devices: []
-    }, { upsert: true }, (err, result) => {
+    DeviceStatus.update({ _id: scadaId }, { $pull: { devices: { d: deviceId } } }, (err, result) => {
       if (err) {
         reject(err);
       }
@@ -156,5 +191,7 @@ module.exports = {
   updateScadaStatus: _updateScadaStatus,
   updateModifiedStatus: _updateModifiedStatus,
   upsertScadaStatus: _upsertScadaStatus,
-  deleteScadaStatus: _deleteScadaStatus
+  upsertDeviceStatus: _upsertDeviceStatus,
+  deleteScadaStatus: _deleteScadaStatus,
+  deleteDeviceStatus: _deleteDeviceStatus
 };

@@ -11,18 +11,19 @@ const deviceManager = wisePaasScada.deviceManager;
 
 // MQTT
 let mqttConf = {
-  host: '127.0.0.1',
+  host: 'PC031206',
   port: 1883,
-  username: '',
-  password: ''
+  username: 'admin',
+  password: 'admin'
 };
 
 let mongoConf = {
-  host: '127.0.0.1',
+  host: 'PC031206',
   port: 27017,
-  username: 'username',
-  password: 'password',
-  database: 'database'
+  username: 'wisepaas',
+  password: 'wisepaas',
+  database: 'WISE-PaaS',
+  uri: 'mongodb://wisepaas:wisepaas@PC031206:27017/WISE-PaaS'
 };
 
 let influxConf = {
@@ -33,14 +34,22 @@ let influxConf = {
   password: ''
 };
 
-datastore.init({
+/* datastore.init({
   mongoConf: mongoConf,
   mqttConf: mqttConf,
   influxConf: influxConf,
   histDBType: constant.databaseType.influxdb
+}); */
+
+scadaManager.init({
+  mongoConf: mongoConf,
+  mqttConf: mqttConf
 });
-scadaManager.init(mongoConf, mqttConf);
-deviceManager.init(mongoConf, mqttConf);
+
+deviceManager.init({
+  mongoConf: mongoConf,
+  mqttConf: mqttConf
+});
 
 let dsParams1 = {
   scadaId: 'ef314a5a-ae3e-4edb-bc31-bf8dacec93ce',
@@ -87,6 +96,62 @@ let histQueryParam1 = {
   dataType: wisePaasScada.const.dataType.last,  // last, min, max, avg
   limit: 100
 };
+
+let param = {
+  '1137e210-4b73-4700-affc-cd1714a90596': {
+    description: 'test'
+  }
+};
+scadaManager.getScadaStatus('test').then((result) => {
+  console.log(result);
+  return scadaManager.upsertScadaStatus({ scadaId: 'test', status: false });
+}).then((result) => {
+  console.log(result);
+  return scadaManager.getScadaStatus('test');
+}).then((result) => {
+  console.log(result);
+  return scadaManager.updateScadaStatus('test', {status: true});
+}).then((result) => {
+  console.log(result);
+  return scadaManager.getScadaStatus('test');
+}).then((result) => {
+  console.log(result);
+  return scadaManager.addModifiedConfigRecord('test', { test: { description: 'test' } });
+}).then((result) => {
+  console.log(result);
+  return scadaManager.getScadaStatus('test');
+}).then((result) => {
+  console.log(result);
+  return scadaManager.syncScadaConfig('test');
+}).then((result) => {
+  console.log(result);
+  return scadaManager.getScadaStatus('test');
+}).then((result) => {
+  console.log(result);
+  return deviceManager.getDeviceStatus({scadaId: 'test', deviceId: 'test'});
+}).then((result) => {
+  console.log(result);
+  return deviceManager.upsertDeviceStatus('test', 'test', {status: true});
+}).then((result) => {
+  console.log(result);
+  return deviceManager.getDeviceStatus({scadaId: 'test', deviceId: 'test'});
+}).then((result) => {
+  console.log(result);
+  return deviceManager.deleteDeviceStatus('test', 'test');
+}).then((result) => {
+  console.log(result);
+  return deviceManager.getDeviceStatus({scadaId: 'test', deviceId: 'test'});
+}).then((result) => {
+  console.log(result);
+  return scadaManager.deleteScadaStatus('test');
+}).then((result) => {
+  console.log(result);
+  return scadaManager.getScadaStatus('test');
+}).then((result) => {
+  console.log(result);
+}).catch((err) => {
+  console.log(err);
+});
 
 /* datastore.getRealData(dsParams1, function (err, result) {
   if (err) {
