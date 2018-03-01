@@ -150,7 +150,7 @@ function _getHistRawData (param, callback) {
       let limit = param.limit || 0;
 
       if (!tags || tags.length === 0) {
-        let err = new Error('The tag can bot be null !');
+        let err = new Error('The tag can not be null !');
         reject(err);
         return callback(err);
       }
@@ -223,7 +223,7 @@ function _getHistDataLog (param, callback) {
       let intervalType = param.intervalType || constant.intervalType.second;  // 'S', 'M', 'H', 'D'
 
       if (!tags || tags.length === 0) {
-        let err = new Error('The tag can bot be null !');
+        let err = new Error('The tag can not be null !');
         reject(err);
         return callback(err);
       }
