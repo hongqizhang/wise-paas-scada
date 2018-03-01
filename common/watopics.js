@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports.amqpTopics = {
-  baseTopic: '.wisepaas.scada.*',
+  baseTopic: '.wisepaas.scada.%s.*',
   configTopic: '.wisepaas.scada.*.cfg',   // /wisepaas/scada/<scadaId>/cfg
   dataTopic: '.wisepaas.scada.*.data',
   connTopic: '.wisepaas.scada.*.conn',
@@ -10,10 +10,7 @@ module.exports.amqpTopics = {
 
 module.exports.amqpQueue = {
   cfgQ: 'scada-ConfigQueue',
-  dataQ: 'scada-DataQueue',
-  connQ: 'scada-ConnQueue',
-  cmdQ: 'scada-CmdQueue',
-  notifyQ: 'scada-NotifyQueue'
+  dataQ: 'scada-DataQueue'
 };
 
 module.exports.mqttTopics = {
