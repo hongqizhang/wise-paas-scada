@@ -7,6 +7,27 @@ const DeviceStatus = require('../models/device-status.js');
 // const waamqp = require('../communication/waamqp.js');
 const wamqtt = require('../communication/wamqtt.js');
 
+function __upsertDeviceStatus (param) {
+  return new Promise((resolve, reject) => {
+    let id = param.scadaId + '/' + param.deviceId;
+    DeviceStatus.update({ _id: id }, {
+      _id: id,
+      status: param.status || false,
+      modified: param.modified || false,
+      ts: param.ts || new Date()
+    }, { upsert: true }, (err, result) => {
+      if (err) {
+        reject(err);
+      }
+      let response = { ok: false };
+      if (result && result.n) {
+        response.ok = (result.n > 0);
+      }
+      resolve(response);
+    });
+  });
+}
+
 function _init (mongoConf, mqttConf) {
   if (mongoConf) {
     if (mongodb && mongodb.isConnected() === false && mongodb.isConnecting() === false) {
@@ -48,15 +69,22 @@ function _getDeviceStatus (params, callback) {
   callback = callback || function () { };
   return new Promise((resolve, reject) => {
     try {
-      if (!Array.isArray(params)) {
-        params = [params];
-      }
-      let condition = { $or: [] };
+      let ids = [];
       for (let i = 0; i < params.length; i++) {
-        condition['$or'].push({ _id: params[i].scadaId, 'devices.d': params[i].deviceId });
+        let param = params[i];
+        if (!param.scadaId) {
+          let err = new Error('scadaId can not be null !');
+          reject(err);
+          return callback(err);
+        }
+        if (!param.deviceId) {
+          let err = new Error('deviceId can not be null !');
+          reject(err);
+          return callback(err);
+        }
+        ids.push(param.scadaId + '/' + param.deviceId);
       }
-
-      DeviceStatus.find(condition, (err, results) => {
+      DeviceStatus.find({ _id: { $in: ids } }, (err, results) => {
         if (err) {
           reject(err);
           return callback(err);
@@ -64,21 +92,15 @@ function _getDeviceStatus (params, callback) {
         let response = [];
         for (let i = 0; i < params.length; i++) {
           let param = params[i];
-          let obj = {
+          let result = results.find(d => d._id === param.scadaId + '/' + param.deviceId);
+          let scada = {
             scadaId: param.scadaId,
             deviceId: param.deviceId,
-            status: false,
-            ts: new Date()
+            status: (result && result.status !== undefined) ? result.status : false,
+            modified: (result && result.modified !== undefined) ? result.modified : false,
+            ts: (result) ? result.ts : new Date()
           };
-          let scada = results.find(s => s._id === param.scadaId);
-          if (scada) {
-            let device = scada.devices.find(d => d.d === param.deviceId);
-            if (device) {
-              obj.status = (device.status !== undefined) ? device.status : false;
-              obj.ts = (device.ts !== undefined) ? device.ts : new Date();
-            }
-          }
-          response.push(obj);
+          response.push(scada);
         }
         resolve(response);
         callback(null, response);
@@ -90,41 +112,25 @@ function _getDeviceStatus (params, callback) {
   });
 }
 
-function _upsertDeviceStatus (scadaId, deviceId, param, callback) {
+function _upsertDeviceStatus (params, callback) {
   callback = callback || function () { };
   return new Promise((resolve, reject) => {
-    if (typeof param.ts === 'string') {
-      param.ts = new Date(param.ts);
+    let promises = [];
+    if (!Array.isArray(params)) {
+      params = [params];
     }
-    DeviceStatus.findOneAndUpdate({ _id: scadaId }, { $setOnInsert: { devices: [] } }, { upsert: true, new: true }, (err, doc) => {
-      if (err) {
+    for (let i = 0; i < params.length; i++) {
+      promises.push(__upsertDeviceStatus(params[i]));
+    }
+    Promise.all(promises)
+      .then((results) => {
+        resolve(results);
+        callback(null, results);
+      })
+      .catch((err) => {
         reject(err);
-        return callback(err);
-      }
-      if (typeof param.ts === 'string') {
-        param.ts = new Date(param.ts);
-      }
-      let device = doc.devices.find(d => d.d === deviceId);
-      if (device) {
-        device.status = param.status || false;
-        device.ts = param.ts || new Date();
-      } else {
-        doc.devices.push({
-          d: deviceId,
-          status: param.status || false,
-          ts: param.ts || new Date()
-        });
-      }
-      DeviceStatus.collection.save(doc)
-        .then(() => {
-          let response = { ok: true };
-          resolve(response);
-          callback(null, response);
-        }).catch((err) => {
-          reject(err);
-          callback(err);
-        });
-    });
+        callback(err);
+      });
   });
 }
 

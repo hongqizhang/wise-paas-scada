@@ -26,14 +26,13 @@ function __updateModifiedStatus (id, modified, callback) {
   });
 }
 
-function __upsertDeviceStatus (param) {
+function __upsertScadaStatus (param) {
   return new Promise((resolve, reject) => {
     DeviceStatus.update({ _id: param.scadaId }, {
       _id: param.scadaId,
-      status: param.status,
-      modified: param.modified,
-      ts: param.ts,
-      devices: []
+      status: param.status || false,
+      modified: param.modified || false,
+      ts: param.ts || new Date()
     }, { upsert: true }, (err, result) => {
       if (err) {
         reject(err);
@@ -145,7 +144,7 @@ function _upsertScadaStatus (params, callback) {
       params = [params];
     }
     for (let i = 0; i < params.length; i++) {
-      promises.push(__upsertDeviceStatus(params[i]));
+      promises.push(__upsertScadaStatus(params[i]));
     }
     Promise.all(promises)
       .then((results) => {
